@@ -1,11 +1,10 @@
 #ifndef __INIT_H__
 #define __INIT_H__
 
-#include "board.h"
 #include <random>
 
-void initBoards();
-void initBitMasks();
+#include "board.h"
+
 void initHash();
 void allInit();
 

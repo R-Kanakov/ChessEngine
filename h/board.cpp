@@ -2,7 +2,6 @@
 
 void Board::reset() {
   for (int i = 0; i < largeNC; ++i) {
-    // TODO: optimize it to get away from mispredictions
     if (convert120To64(i) < regularNC)
       board[i] = EMPTY;
     else
@@ -28,10 +27,10 @@ void Board::reset() {
   posKey = 0ull;
 }
 
-int Board::parseFEN(const std::string_view &fen) {
+void Board::parseFEN(const std::string_view &fen) {
   reset();
 
-  int rank = RANK_8, file = FILE_A, piece = EMPTY;
+  size_t rank = RANK_8, file = FILE_A, piece = EMPTY;
 
   // TODO: make this static constexpr
   std::unordered_map<char, int> pieceParser{
@@ -101,13 +100,10 @@ int Board::parseFEN(const std::string_view &fen) {
   posKey = generate();
 
   update();
-
-  return 0;
 }
 
 size_t Board::generate() const {
-  size_t key = 0;
-  int piece = EMPTY;
+  size_t key = 0, piece = EMPTY;
   for (int sq = 0; sq < largeNC; ++sq) {
     piece = board[sq];
     if (piece != NO_SQ && piece != EMPTY && piece != OFFBOARD)
@@ -155,7 +151,7 @@ void Board::dump(std::ostream &os) const {
 
 void Board::update() {
   for (int i = 0; i < largeNC; ++i) {
-    int piece = board[i];
+    size_t piece = board[i];
     if (piece != OFFBOARD && piece != EMPTY) {
       int color = pieceCol[piece];
 
@@ -274,7 +270,7 @@ void Board::check() const {
   assert(castlePerm >= 0 && castlePerm <= 15);
 }
 
-bool Board::isAttacked(const int sq, const bool side) const {
+bool Board::isAttacked(const int sq, const unsigned char side) const {
   // Pawns
   if (side == WHITE) {
     if (board[sq - 11] == wP || board[sq - 9] == wP)
@@ -284,7 +280,7 @@ bool Board::isAttacked(const int sq, const bool side) const {
 
   // Knights
   for (auto knight : {-8, -19, -21, -12, 8, 19, 21, 12}) {
-    int piece = board[sq + knight];
+    size_t piece = board[sq + knight];
     if (piece != OFFBOARD && (piece == wN || piece == bN) &&
         pieceCol[piece] == side)
       return true;
@@ -359,7 +355,7 @@ bool Board::isAttacked(const int sq, const bool side) const {
   }
 
   for (auto king : {-1, -10, 1, 10, -9, -11, 11, 9}) {
-    int piece = board[sq + king];
+    size_t piece = board[sq + king];
     if (piece != OFFBOARD && (piece == wK || piece == bK) &&
         pieceCol[piece] == side)
       return true;
@@ -367,57 +363,3 @@ bool Board::isAttacked(const int sq, const bool side) const {
 
   return 0;
 }
-
-int Move::getFrom() { return info & 0x7f; }
-
-int Move::getTo() { return (info >> 7) & 0x7f; }
-
-int Move::getCaptured() { return (info >> 14) & 0xf; }
-
-int Move::getPromoted() { return (info >> 20) & 0xf; }
-
-int Move::getEnPas() { return info & 0x40000; }
-
-int Move::getPawnStart() { return info & 0x80000; }
-
-int Move::getCastle() { return info & 0x100000; }
-
-int Move::getPawnBits() { return 0x7c000; }
-
-int Move::getPromotedBits() { return 0xf00000; }
-
-int convertFR(int file, int rank) { return 21 + file + 10 * rank; }
-
-inline int convert64To120(int sq) { return Board64[sq]; }
-
-inline int convert120To64(int sq) { return Board120[sq]; }
-
-void printBitBoard(size_t bb) {
-  size_t shift = 1ULL;
-  int rank = 0, file = 0, sq = 0, sq64 = 0;
-  std::cout << "\n";
-  for (rank = RANK_8; rank >= RANK_1; --rank) {
-    for (file = FILE_A; file <= FILE_H; ++file) {
-      sq = convertFR(file, rank); // 120 based index
-      sq64 = Board120[sq];        // 64 based index
-      if ((shift << sq64) & bb)
-        std::cout << "X";
-      else
-        std::cout << "-";
-    }
-    std::cout << "\n";
-  }
-}
-
-size_t popBit(size_t &bb) {
-  size_t b = bb ^ (bb - 1);
-  unsigned fold = (b & UINT32_MAX) ^ (b >> 32);
-  bb &= bb - 1;
-  return bitTable[(fold * 0x783a9b23u) >> 26u];
-}
-
-size_t countBit(std::bitset<64> bb) { return bb.count(); }
-
-void clearBit(size_t &bb, int square) { bb &= clearMask[square]; }
-
-void setBit(size_t &bb, int square) { bb |= setMask[square]; }

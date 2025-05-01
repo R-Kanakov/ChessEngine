@@ -1,5 +1,5 @@
-#ifndef __MOVE__
-#define __MOVE__
+#ifndef __MOVE_H__
+#define __MOVE_H__
 
 // We will coding one bit with all information of the move we need
 // TODO: maybe make it with each variable separately
@@ -26,30 +26,34 @@
 // 0001 0000 0000 0000 0000 0000 0000
 // Castle,                            -> 0x1000000
 
-class Move {
-  int info;
-  int score;
+namespace move {
 
-public:
-  int getFrom() const;
-  int getTo() const;
-  int getCaptured() const;
-  int getPromoted() const;
-  int getEnPas() const;
-  int getPawnStart() const;
-  int getCastle() const;
-  int getPawnBits() const;
-  int getPromotedBits() const;
-};
+  class Move {
+    int info;
+    int score;
 
-// Information to undo a move
-class Undo {
-public:
-  int move;
-  int castlePerm;
-  int enPas;
-  bool fiftyMove;
-  size_t posKey;
-};
+  public:
+    int getFrom() const;
+    int getTo() const;
+    int getCaptured() const;
+    int getPromoted() const;
+    int getEnPas() const;
+    int getPawnStart() const;
+    int getCastle() const;
+    int getPawnBits() const;
+    int getPromotedBits() const;
+  };
 
-#endif // __MOVE__
+  // Information to undo a move
+  class Undo {
+  public:
+    int move;
+    int castlePerm;
+    int enPas;
+    bool fiftyMove;
+    size_t posKey;
+  };
+
+} // namespace move
+
+#endif // __MOVE_H__

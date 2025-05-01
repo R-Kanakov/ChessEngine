@@ -4,11 +4,16 @@
 #include <cassert>
 #include <iomanip>
 #include <iostream>
-#include <unordered_map> // TODO: maybe change it to absl or boost
 #include <vector>
 
-#include "move.h"
-#include "board_constants.h"
+#include "board_constants.hpp"
+#include "move.hpp"
+
+// TODO: maybe change it to absl or boost
+// https://www.boost.org/doc/libs/1_88_0/libs/hana/doc/html/structboost_1_1hana_1_1map.html
+#include <unordered_map> 
+
+namespace board {
 
 class Board {
   // 120 squares board, contains type of piece on each square
@@ -65,7 +70,7 @@ class Board {
   std::array<int, 2> material;
 
   // History of the game
-  std::vector<Undo> history;
+  std::vector<move::Undo> history;
 
   // Piece list is a matrix that contain a type of piece in the current position
   // For example: we want to set white knight to the board on E1 square
@@ -100,5 +105,7 @@ public:
   // Checking is square attacked by side
   bool isAttacked(const int sq, const unsigned char side) const;
 };
+
+} // namespace board
 
 #endif // __BOARD_H__

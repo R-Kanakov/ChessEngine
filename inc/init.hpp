@@ -3,7 +3,7 @@
 
 #include <random>
 
-#include "board.h"
+#include "board.hpp"
 
 void initHash();
 void allInit();

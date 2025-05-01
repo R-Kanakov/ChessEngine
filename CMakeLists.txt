@@ -1,47 +1,27 @@
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.11)
 
-set(PROJECT_NAME Engine)
+set(PROJECT_NAME Chess_Engine)
 project(${PROJECT_NAME})
 
-find_program(CMAKE_C_COMPILER clang)
-find_program(CMAKE_CXX_COMPILER clang++)
-
-if (NOT CMAKE_C_COMPILER)
-  polly_fatal_error("clang not found")
-endif()
-
-if (NOT CMAKE_CXX_COMPILER)
-  polly_fatal_error("clang++ not found")
-endif()
-
-set(
-    CMAKE_C_COMPILER
-    "${CMAKE_C_COMPILER}"
-    CACHE
-    STRING
-    "C compiler"
-    FORCE
+SET(SRCS
+  src/board.cpp
+  src/init.cpp
+  src/move.cpp
 )
 
-set(
-    CMAKE_CXX_COMPILER
-    "${CMAKE_CXX_COMPILER}"
-    CACHE
-    STRING
-    "C++ compiler"
-    FORCE
+SET(TESTS ${CMAKE_SOURCE_DIR}/Tests)
+
+add_library(chesslib STATIC ${SRCS})
+target_include_directories(chesslib PUBLIC "inc")
+
+target_compile_features(chesslib PUBLIC cxx_std_20)
+
+target_compile_definitions(chesslib PRIVATE
+  $<$<CONFIG:Debug>:DEBUG_ONLY=1>
+  $<$<CONFIG:Release>:RELEASE_ONLY=1>
+  FOO=3
 )
 
-set(CMAKE_CXX_STANDARD 20)
+add_executable(Engine main/main.cpp)
+target_link_libraries(Engine chesslib)
 
-set(Enginelib EngineLib)
-set(Enginesrc EngineExe)
-
-set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "Configs" FORCE)
-
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE Release)
-endif()
-
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/h)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/cpp)

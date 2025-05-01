@@ -1,4 +1,6 @@
-#include "move.h"
+#include "move.hpp"
+
+using namespace move;
 
 int Move::getFrom() const { return info & 0x7f; }
 

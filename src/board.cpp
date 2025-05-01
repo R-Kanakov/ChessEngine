@@ -1,12 +1,11 @@
-#include "board.h"
+#include <bit>
+
+#include "board.hpp"
+
+using namespace board;
 
 void Board::reset() {
-  for (int i = 0; i < largeNC; ++i) {
-    if (convert120To64(i) < regularNC)
-      board[i] = EMPTY;
-    else
-      board[i] = OFFBOARD;
-  }
+  board = util::sequence_in_shell<util::zeros_sequence, 0, regularNC, OFFBOARD>::get();
 
   std::fill(pawns.begin(), pawns.end(), 0ull);
   std::fill(bigPiece.begin(), bigPiece.end(), 0);
@@ -32,11 +31,11 @@ void Board::parseFEN(const std::string_view &fen) {
 
   size_t rank = RANK_8, file = FILE_A, piece = EMPTY;
 
-  // TODO: make this static constexpr
+  // TODO: make unordered_maps static constexpr
   std::unordered_map<char, int> pieceParser{
       {'p', bP}, {'P', wP}, {'n', bN}, {'N', wN}, {'k', bK}, {'K', wK},
       {'r', bR}, {'R', wR}, {'b', bB}, {'B', wB}, {'q', bQ}, {'Q', wQ}};
-  // TODO: make this static constexpr
+  
   std::unordered_map<char, int> countParser{{'1', 1}, {'5', 5}, {'2', 2},
                                             {'6', 6}, {'3', 3}, {'7', 7},
                                             {'4', 4}, {'8', 8}};
@@ -121,7 +120,7 @@ size_t Board::generate() const {
   return key;
 }
 
-void Board::dump(std::ostream &os) const {
+void Board::dump(std::ostream& os) const {
   os << "\n        Game board\n";
 
   for (int rank = RANK_8; rank >= RANK_1; --rank) {
@@ -181,13 +180,12 @@ void Board::update() {
 }
 
 void Board::check() const {
-  // TODO: mb make it like
-  // #ifdef DEBUG
+  #if defined(DEBUG_ONLY)
   int t_PieceNum[13] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-  int t_bigPiece[2] = {0, 0};
-  int t_majPiece[2] = {0, 0};
-  int t_minPiece[2] = {0, 0};
-  int t_material[2] = {0, 0};
+  int t_bigPiece[2]  = {0, 0};
+  int t_majPiece[2]  = {0, 0};
+  int t_minPiece[2]  = {0, 0};
+  int t_material[2]  = {0, 0};
 
   size_t sq64, t_piece, t_Piece_num, sq120, colour, pcount;
 
@@ -195,7 +193,7 @@ void Board::check() const {
 
   t_pawns[WHITE] = pawns[WHITE];
   t_pawns[BLACK] = pawns[BLACK];
-  t_pawns[BOTH] = pawns[BOTH];
+  t_pawns[BOTH]  = pawns[BOTH];
 
   // check piece lists
   for (t_piece = wP; t_piece <= bK; ++t_piece) {
@@ -209,27 +207,31 @@ void Board::check() const {
   for (sq64 = 0; sq64 < 64; ++sq64) {
     sq120 = convert64To120(sq64);
     t_piece = board[sq120];
+
     t_PieceNum[t_piece]++;
     colour = pieceCol[t_piece];
-    if (pieceBig[t_piece] == true)
+
+    if (pieceBig[t_piece] == true) {
       t_bigPiece[colour]++;
-    if (pieceMaj[t_piece] == true)
-      t_majPiece[colour]++;
-    if (pieceMin[t_piece] == true)
-      t_minPiece[colour]++;
+      if (pieceMaj[t_piece] == true)
+        t_majPiece[colour]++;
+      if (pieceMin[t_piece] == true)
+        t_minPiece[colour]++;
+    }
     t_material[colour] += pieceVal[t_piece];
   }
 
-  for (t_piece = wP; t_piece <= bK; ++t_piece) {
+  for (t_piece = wP; t_piece <= bK; ++t_piece)
     assert(t_PieceNum[t_piece] == pieceNum[t_piece]);
-  }
 
   // Checking bitboards count
-  pcount = countBit(t_pawns[WHITE]);
+  pcount = std::popcount(t_pawns[WHITE]);
   assert(pcount == pieceNum[wP]);
-  pcount = countBit(t_pawns[BLACK]);
+
+  pcount = std::popcount(t_pawns[BLACK]);
   assert(pcount == pieceNum[bP]);
-  pcount = countBit(t_pawns[BOTH]);
+
+  pcount = std::popcount(t_pawns[BOTH]);
   assert(pcount == (pieceNum[bP] + pieceNum[wP]));
 
   // Checking bitboards squares
@@ -251,10 +253,13 @@ void Board::check() const {
 
   assert(t_material[WHITE] == material[WHITE] &&
          t_material[BLACK] == material[BLACK]);
+
   assert(t_minPiece[WHITE] == minPiece[WHITE] &&
          t_minPiece[BLACK] == minPiece[BLACK]);
+
   assert(t_majPiece[WHITE] == majPiece[WHITE] &&
          t_majPiece[BLACK] == majPiece[BLACK]);
+
   assert(t_bigPiece[WHITE] == bigPiece[WHITE] &&
          t_bigPiece[BLACK] == bigPiece[BLACK]);
 
@@ -268,6 +273,7 @@ void Board::check() const {
   assert(board[kings[BLACK]] == bK);
 
   assert(castlePerm >= 0 && castlePerm <= 15);
+#endif
 }
 
 bool Board::isAttacked(const int sq, const unsigned char side) const {

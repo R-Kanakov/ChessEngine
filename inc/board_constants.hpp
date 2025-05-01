@@ -1,11 +1,11 @@
-#ifndef __CHESS_CONSTANTS__
-#define __CHESS_CONSTANTS__
+#ifndef __CHESS_CONSTANTS_H__
+#define __CHESS_CONSTANTS_H__
 
 #include <array>
 #include <bitset>
 #include <string>
 
-#include "util.h"
+#include "util.hpp"
 
 // Color
 enum { WHITE, BLACK, BOTH };
@@ -62,6 +62,7 @@ constexpr std::array pieceMaj{false, false, false, false, true, true, true,
 // Is current piece a minor piece?
 constexpr std::array pieceMin{false, false, true, true,  false, false, false,
                               false, true,  true, false, false, false};
+
 // Cost of each piece
 // pawn = 100, knight = 325, bishop = 325,
 // rook = 550, queen = 1000, king = 50000
@@ -85,7 +86,7 @@ constexpr std::array<size_t, largeNC> bFiles = filesSequence{}.get();
 
 // Array that give back rank from square
 template <size_t Start, size_t End> struct wrapped_columnar_sequence {
-  using type = typename util::columnar_sequence<RANK_1, RANK_8, 8>::type;
+  using type = typename util::columnar_sequence<Start, End, 8>::type;
 };
 
 using columnar_sequence_in_shell =
@@ -111,7 +112,7 @@ constexpr std::array<size_t, largeNC> Board120 = Sequence120{}.get();
 
 // 64 index board
 using Sequence64 = typename util::range_sequence_with_two_gaps<21, 98>::type;
-constexpr std::array<size_t, 64> Board64 =
+constexpr std::array<size_t, regularNC> Board64 =
     util::make_array_from_sequence(Sequence64{});
 
 // Basic conversion from [file, rank] to index of 120 squares board
@@ -150,11 +151,8 @@ inline size_t popBit(size_t &bb) {
   return bitTable[static_cast<int>((fold * 0x783a9b23u) >> 26u)];
 }
 
-// Returns the number of bits set to 1
-inline size_t countBit(std::bitset<64> bb) { return bb.count(); }
-
 inline void clearBit(size_t &bb, size_t square) { bb &= clearMask[square]; }
 
 inline void setBit(size_t &bb, size_t square) { bb |= setMask[square]; }
 
-#endif
+#endif // __CHESS_CONSTANTS_H__

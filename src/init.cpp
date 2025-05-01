@@ -1,4 +1,4 @@
-#include "init.h"
+#include "init.hpp"
 
 std::array<std::array<size_t, 120>, 13> pieceKeys;
 std::array<size_t, 16> castleKeys;

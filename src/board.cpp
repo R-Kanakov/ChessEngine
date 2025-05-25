@@ -5,7 +5,7 @@
 using namespace board;
 
 void Board::reset() {
-  board = util::sequence_in_shell<util::zeros_sequence, 0, regularNC, OFFBOARD>::get();
+  board = util::sequence_in_shell<util::zeros_sequence, EMPTY, regularNC, OFFBOARD>::get();
 
   std::fill(pawns.begin(), pawns.end(), 0ull);
   std::fill(bigPiece.begin(), bigPiece.end(), 0);
@@ -16,12 +16,12 @@ void Board::reset() {
 
   kings[WHITE] = kings[BLACK] = 0;
 
-  side = BOTH;
-  enPas = NO_SQ;
-  fiftyMove = 0;
+  side       = BOTH;
+  enPas      = NO_SQ;
+  fiftyMove  = 0;
   castlePerm = 0;
 
-  ply = 0;
+  ply    = 0;
   hisPly = 0;
   posKey = 0ull;
 }
@@ -31,7 +31,6 @@ void Board::parseFEN(const std::string_view &fen) {
 
   size_t rank = RANK_8, file = FILE_A, piece = EMPTY;
 
-  // TODO: make unordered_maps static constexpr
   std::unordered_map<char, int> pieceParser{
       {'p', bP}, {'P', wP}, {'n', bN}, {'N', wN}, {'k', bK}, {'K', wK},
       {'r', bR}, {'R', wR}, {'b', bB}, {'B', wB}, {'q', bQ}, {'Q', wQ}};
@@ -125,8 +124,10 @@ void Board::dump(std::ostream& os) const {
 
   for (int rank = RANK_8; rank >= RANK_1; --rank) {
     os << rank + 1 << " ";
+    
     for (int file = FILE_A; file <= FILE_H; ++file)
       os << std::setw(3) << pieceChar[board[convertFR(file, rank)]];
+    
     os << "\n";
   }
 
@@ -135,17 +136,14 @@ void Board::dump(std::ostream& os) const {
   for (int file = FILE_A; file <= FILE_H; ++file)
     os << std::setw(3) << static_cast<char>('a' + file);
 
-  os << "\n";
-
-  os << "side : " << sideChar[side] << "\n";
-
-  os << "enPas : " << enPas << "\n";
-
+  os << "\nside : " << sideChar[side] << "\n";
+  os << "enPas : "  << enPas << "\n";
   os << "Castle : " << (castlePerm & WKC ? 'K' : '-')
-     << (castlePerm & WQC ? 'Q' : '-') << (castlePerm & BKC ? 'k' : '-')
-     << (castlePerm & BQC ? 'q' : '-') << "\n";
+                    << (castlePerm & WQC ? 'Q' : '-')
+                    << (castlePerm & BKC ? 'k' : '-')
+                    << (castlePerm & BQC ? 'q' : '-');
 
-  os << "posKey : " << std::hex << posKey << std::dec << "\n";
+  os << "\nposKey : " << std::hex << posKey << std::dec << "\n";
 }
 
 void Board::update() {
@@ -156,10 +154,10 @@ void Board::update() {
 
       if (piece == wP) {
         setBit(pawns[WHITE], convert120To64(i));
-        setBit(pawns[BOTH], convert120To64(i));
+        setBit(pawns[BOTH],  convert120To64(i));
       } else if (piece == bP) {
         setBit(pawns[BLACK], convert120To64(i));
-        setBit(pawns[BOTH], convert120To64(i));
+        setBit(pawns[BOTH],  convert120To64(i));
       } else
         bigPiece[color]++; // if (pieceBig[piece])
 
@@ -285,7 +283,7 @@ bool Board::isAttacked(const int sq, const unsigned char side) const {
     return true;
 
   // Knights
-  for (auto knight : {-8, -19, -21, -12, 8, 19, 21, 12}) {
+  for (auto knight : knightMoves) {
     size_t piece = board[sq + knight];
     if (piece != OFFBOARD && (piece == wN || piece == bN) &&
         pieceCol[piece] == side)
@@ -360,7 +358,7 @@ bool Board::isAttacked(const int sq, const unsigned char side) const {
       return true;
   }
 
-  for (auto king : {-1, -10, 1, 10, -9, -11, 11, 9}) {
+  for (auto king : kingMoves) {
     size_t piece = board[sq + king];
     if (piece != OFFBOARD && (piece == wK || piece == bK) &&
         pieceCol[piece] == side)

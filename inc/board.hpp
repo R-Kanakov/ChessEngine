@@ -5,13 +5,10 @@
 #include <iomanip>
 #include <iostream>
 #include <vector>
+#include <unordered_map>
 
 #include "board_constants.hpp"
 #include "move.hpp"
-
-// TODO: maybe change it to absl or boost
-// https://www.boost.org/doc/libs/1_88_0/libs/hana/doc/html/structboost_1_1hana_1_1map.html
-#include <unordered_map> 
 
 namespace board {
 
@@ -83,6 +80,19 @@ class Board {
   static constexpr std::string_view pieceChar = ".PNBRQKpnbrqk";
   static constexpr std::string_view sideChar = "wb-";
 
+public:
+  Board() { reset();  }
+  Board(const std::string_view& fen) { parseFEN(fen); }
+
+// Getters
+public:
+  int getSide() const { return side; }
+  unsigned char getPieceNum(int piece) const { return pieceNum[piece]; }
+  unsigned char getPieceListSq(int side, int num) const { return pieceList[side][num]; }
+  size_t getPiece(int square) const { return board[square]; }
+  size_t getEnPas() const { return enPas; }
+
+// Methods
 public:
   // Reset most of the Board fields
   void reset();

@@ -2,13 +2,12 @@
  * Remark:
  * The code provided here is not mandatory, as it can be replaced in board.h
  * with a simple initializer lists. The primary purpose of this code is to
- * practice meta/template programming and make the code more generic. Overall,
+ * practice meta/template programming and make the code more "generic". Overall,
  * the technique used here can even be efficient for large arrays (not really
- * for now)
+ * for now because of compiler constraint:
+ * "recursive template instantiation exceeded maximum depth of 1024")
  */
 
-// Main issue is:
-// "recursive template instantiation exceeded maximum depth of 1024"
 
 #ifndef __UTIL_H__
 #define __UTIL_H__
@@ -16,6 +15,7 @@
 #include <algorithm>
 #include <array>
 #include <concepts>
+#include <iostream>
 
 namespace util {
 template <size_t... Ints> struct index_sequence {
@@ -31,20 +31,21 @@ make_array_from_sequence(Seq<Ints...>) {
 
 // Integer square root
 template <size_t N, size_t L = 1, size_t H = N, size_t mid = (L + H + 1) / 2>
-struct Sqrt
-  : std::integral_constant <
-  size_t, std::conditional_t<(N < mid* mid), Sqrt<N, L, mid - 1>,
-  Sqrt<N, mid, H>>{} > {};
+struct Sqrt : std::integral_constant <size_t, std::conditional_t<
+  (N < mid* mid),
+    Sqrt<N, L, mid - 1>,
+    Sqrt<N, mid, H>>
+  {}>{};
+
 template <size_t N, size_t S>
 struct Sqrt<N, S, S, S> : std::integral_constant<size_t, S> {};
 
 
 // Check if number is prime
 template <size_t N, size_t I = 2> struct is_prime {
-  static constexpr bool value =
-      (N > I) && (N % I != 0) && is_prime<N, I + 1>::value;
+  static constexpr bool value = (N > I) && (N % I != 0) &&
+                                is_prime<N, I + 1>::value;
 };
-
 //                                     Sqrt<N>> {
 template <size_t N> struct is_prime<N, N> { 
   static constexpr bool value = (N > 1);
@@ -52,17 +53,19 @@ template <size_t N> struct is_prime<N, N> {
 
 
 // Check field (::type) for existance
-template <template <size_t, size_t> typename Seq, size_t Start, size_t End,
+template <template <size_t, size_t> typename Seq,
+          size_t Start, size_t End,
           typename = void>
 struct has_typedef_type : std::false_type {};
 
-template <template <size_t, size_t> typename Seq, size_t Start, size_t End>
+template <template <size_t, size_t> typename Seq,
+          size_t Start, size_t End>
 struct has_typedef_type<Seq, Start, End,
                         std::void_t<typename Seq<Start, End>::type>>
     : std::true_type {};
 
 
-// Size
+// Size of sequence
 template <template <size_t...> typename Seq, size_t... Ints>
 consteval size_t seq_size(Seq<Ints...>) {
   return sizeof...(Ints);
@@ -90,7 +93,7 @@ consteval std::pair<size_t, size_t> find_pair() {
 
 
 // ----------------------------Sequence for Board64----------------------------
-// The main idea is that we skip [9], [10], [18], [19], [28], [29] and so on
+// The main idea is that we skip [9], [10], [19], [20], [29], [30] and so on
 // elements in sequence
 
 // Example: sequence from 1 to 18
@@ -105,12 +108,11 @@ template <size_t Start, size_t End> struct range_sequence_with_two_gaps {
 
   using type = typename std::conditional_t<
     (End > Start),
-    typename std::conditional_t<
-    (End % 10 != (Start + 9) % 10) && (End % 10 != (Start + 8) % 10),
-    typename range_sequence_with_two_gaps<
-    Start, End - 1>::type::template append<End>,
-    typename range_sequence_with_two_gaps<Start, End - 1>::type>,
-    index_sequence<>>;
+      typename std::conditional_t<
+        (End % 10 != (Start + 9) % 10) && (End % 10 != (Start + 8) % 10),
+          typename range_sequence_with_two_gaps<Start, End - 1>::type::template append<End>,
+          typename range_sequence_with_two_gaps<Start, End - 1>::type>,
+      index_sequence<>>;
 };
 
 template <size_t Start> struct range_sequence_with_two_gaps<Start, Start> {
@@ -126,12 +128,12 @@ template <size_t Start> struct range_sequence_with_two_gaps<Start, Start> {
 // So....
 static constexpr int shellRows = 2, shellCols = 1;
 
-// This will be clearer with an example
+// The only constraint is that the number of all its elements
+// (which are really used in it) mustn't be a prime number
+
+// This will be clearer with an example:
 // Input is a `simple_sequence` (you can use any other) from 1 to 4
 // 5 will be shell number
-
-// The only limit on sequence: The number of all its elements (which are really
-// used in it) mustn't be a prime number
 
 // 5  5  5  5
 // 5  5  5  5
@@ -146,8 +148,8 @@ concept SequenceCheck = has_typedef_type<Seq, Start, End>::value &&
   !(is_prime<seq_size(typename Seq<Start, End>::type{})>::value);
 
 // Main algorithm to create sequence in a shell
-template <template <size_t Start, size_t End> typename Seq, size_t Start,
-          size_t End, size_t shellNum>
+template <template <size_t Start, size_t End> typename Seq,
+          size_t Start, size_t End, size_t shellNum>
   requires SequenceCheck<Seq, Start, End>
 struct sequence_in_shell {
   static_assert(Start < End);
@@ -189,7 +191,10 @@ struct sequence_in_shell {
                               j * 2 * shellCols);
 
           arr[i] = seq[index];
-        } else arr[i] = shellNum;
+        }
+        else {
+          arr[i] = shellNum;
+        }
       }
     }
     return arr;
@@ -198,14 +203,13 @@ struct sequence_in_shell {
 
 
 // TODO: move it to tests
-// -----------------------------Concept work check
+// Concept work check
 
 // sequence_in_shell<range_sequence_with_two_gaps, 21, 35, 100>;
 
 // Error: "constraints not satisfied for class template", because
 // if range_sequence_with_two_gaps `A` has numbers [21, 35] \ [29, 30] ->
 // -> size(A) = 13
-
 
 template <int Start, int End> struct fake_range {
   using typ = int;      // not equal to `type`
@@ -247,8 +251,7 @@ template <size_t Start> struct sequence_with_tilda_shift<Start, Start> {
 template <size_t Start, size_t End> struct simple_sequence {
   static_assert(Start < End);
 
-  using type =
-      typename simple_sequence<Start, End - 1>::type::template append<End>;
+  using type = typename simple_sequence<Start, End - 1>::type::template append<End>;
 };
 
 template <size_t Start> struct simple_sequence<Start, Start> {
@@ -295,15 +298,15 @@ template <size_t From, size_t To, size_t N> struct columnar_sequence {
 
   template <size_t Current> struct generate_columns {
     using type = typename concat_sequences<
-        typename generate_columns<Current + 1>::type,
+        typename generate_columns<Current - 1>::type,
         typename unique_sequence<Current, N>::type>::type;
   };
 
-  template <> struct generate_columns<To> {
-    using type = unique_sequence<To, N>::type;
+  template <> struct generate_columns<From> {
+    using type = unique_sequence<From, N>::type;
   };
 
-  using type = typename generate_columns<From>::type;
+  using type = typename generate_columns<To>::type;
 };
 
 

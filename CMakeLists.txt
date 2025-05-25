@@ -19,7 +19,6 @@ target_compile_features(chesslib PUBLIC cxx_std_20)
 target_compile_definitions(chesslib PRIVATE
   $<$<CONFIG:Debug>:DEBUG_ONLY=1>
   $<$<CONFIG:Release>:RELEASE_ONLY=1>
-  FOO=3
 )
 
 add_executable(Engine main/main.cpp)

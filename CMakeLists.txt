@@ -1,7 +1,11 @@
 cmake_minimum_required(VERSION 3.11)
 
 set(PROJECT_NAME Chess_Engine)
+
 project(${PROJECT_NAME})
+
+include(cmake/boost.cmake)
+include(cmake/gtest.cmake)
 
 SET(SRCS
   src/board.cpp
@@ -12,7 +16,7 @@ SET(SRCS
 SET(TESTS ${CMAKE_SOURCE_DIR}/Tests)
 
 add_library(chesslib STATIC ${SRCS})
-target_include_directories(chesslib PUBLIC "inc")
+target_include_directories(chesslib PUBLIC "include")
 
 target_compile_features(chesslib PUBLIC cxx_std_20)
 
@@ -22,5 +26,9 @@ target_compile_definitions(chesslib PRIVATE
 )
 
 add_executable(Engine main/main.cpp)
-target_link_libraries(Engine chesslib)
+target_link_libraries(Engine chesslib) # mb use ${}
 
+include_directories(3dparty)
+include_directories(test)
+
+add_subdirectory(test)

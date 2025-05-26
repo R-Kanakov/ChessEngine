@@ -6,10 +6,9 @@
 
 #include "board_constants.hpp"
 
-// forward declaration, because we cant #include "board.hpp" - we already included this file in it
-namespace board {
-class Board;
-}
+// Forward declaration
+// We cant #include "board.hpp" because of cyclic dependency
+namespace board { class Board; }
 
 namespace move {
  /*

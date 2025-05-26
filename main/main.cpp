@@ -91,11 +91,6 @@ int main() {
   l.GenerateAllMoves(b);
 
   l.dump(std::cout);
-  int a = 0;
-  int &&b = std::move(a);
-
-  B bbb;
-  bbb->x = 0;
 
   return 0;
 }

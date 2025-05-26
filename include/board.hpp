@@ -4,10 +4,10 @@
 #include <cassert>
 #include <iomanip>
 #include <iostream>
-#include <vector>
 #include <unordered_map>
+#include <vector>
+#include <boost/libs/hana/include/boost/hana.hpp>
 
-#include "board_constants.hpp"
 #include "move.hpp"
 
 namespace board {
@@ -80,19 +80,22 @@ class Board {
   static constexpr std::string_view pieceChar = ".PNBRQKpnbrqk";
   static constexpr std::string_view sideChar = "wb-";
 
+  // Constructors
 public:
-  Board() { reset();  }
-  Board(const std::string_view& fen) { parseFEN(fen); }
+  Board() { reset(); }
+  Board(const std::string_view &fen) { parseFEN(fen); }
 
-// Getters
+  // Getters
 public:
   int getSide() const { return side; }
   unsigned char getPieceNum(int piece) const { return pieceNum[piece]; }
-  unsigned char getPieceListSq(int side, int num) const { return pieceList[side][num]; }
+  unsigned char getPieceListSq(int side, int num) const {
+    return pieceList[side][num];
+  }
   size_t getPiece(int square) const { return board[square]; }
   size_t getEnPas() const { return enPas; }
 
-// Methods
+  // Public methods
 public:
   // Reset most of the Board fields
   void reset();

@@ -13,22 +13,23 @@ SET(SRCS
   src/move.cpp
 )
 
-SET(TESTS ${CMAKE_SOURCE_DIR}/Tests)
-
 add_library(chesslib STATIC ${SRCS})
 target_include_directories(chesslib PUBLIC "include")
 
-target_compile_features(chesslib PUBLIC cxx_std_20)
+target_link_libraries(chesslib PUBLIC boost)
+target_include_directories(chesslib PUBLIC ${CMAKE_BINARY_DIR}/chess_engine_boost/install/include)
 
+target_compile_features(chesslib PUBLIC cxx_std_20)
 target_compile_definitions(chesslib PRIVATE
   $<$<CONFIG:Debug>:DEBUG_ONLY=1>
   $<$<CONFIG:Release>:RELEASE_ONLY=1>
 )
 
-add_executable(Engine main/main.cpp)
-target_link_libraries(Engine chesslib) # mb use ${}
+add_executable(${PROJECT_NAME} main/main.cpp)
 
-include_directories(3dparty)
-include_directories(test)
+target_link_libraries(${PROJECT_NAME} PRIVATE chesslib)
+
+#include_directories(3dparty)
+#include_directories(test)
 
 add_subdirectory(test)

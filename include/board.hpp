@@ -6,7 +6,6 @@
 #include <iostream>
 #include <unordered_map>
 #include <vector>
-#include <boost/libs/hana/include/boost/hana.hpp>
 
 #include "move.hpp"
 

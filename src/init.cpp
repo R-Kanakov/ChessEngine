@@ -4,8 +4,6 @@ std::array<std::array<size_t, 120>, 13> pieceKeys;
 std::array<size_t, 16> castleKeys;
 size_t sideKey;
 
-// TODO: make constexpr linear congruential generator in `util.hpp`
-
 void initHash() {
   std::mt19937 mersenne(std::random_device{}());
   std::uniform_int_distribution<size_t> dis(1, ULLONG_MAX);

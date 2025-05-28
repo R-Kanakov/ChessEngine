@@ -5,7 +5,9 @@
 using namespace board;
 
 void Board::reset() {
-  board = util::sequence_in_shell<util::zeros_sequence, EMPTY, regularNC, OFFBOARD>::get();
+  using cs = util::ñonsecutive_sequence<size_t, EMPTY, regularNC - 1>::type;
+  using reset = util::sequence_in_shell<size_t, cs, OFFBOARD>;
+  board = reset::get();
 
   std::fill(pawns.begin(), pawns.end(), 0ull);
   std::fill(bigPiece.begin(), bigPiece.end(), 0);
@@ -31,13 +33,13 @@ void Board::parseFEN(const std::string_view &fen) {
 
   size_t rank = RANK_8, file = FILE_A, piece = EMPTY;
 
-  std::unordered_map<char, int> pieceParser{
+  static std::unordered_map<char, int> pieceParser{
       {'p', bP}, {'P', wP}, {'n', bN}, {'N', wN}, {'k', bK}, {'K', wK},
       {'r', bR}, {'R', wR}, {'b', bB}, {'B', wB}, {'q', bQ}, {'Q', wQ}};
-  
-  std::unordered_map<char, int> countParser{{'1', 1}, {'5', 5}, {'2', 2},
-                                            {'6', 6}, {'3', 3}, {'7', 7},
-                                            {'4', 4}, {'8', 8}};
+
+  static std::unordered_map<char, int> countParser{
+      {'1', 1}, {'5', 5}, {'2', 2}, {'6', 6},
+      {'3', 3}, {'7', 7}, {'4', 4}, {'8', 8}};
 
   auto it = fen.begin(), end = fen.end();
   for (;; ++it) {
@@ -87,6 +89,7 @@ void Board::parseFEN(const std::string_view &fen) {
     }
   } else
     ++it;
+  
   ++it;
 
   if (*it != '-') {
@@ -159,7 +162,7 @@ void Board::update() {
         setBit(pawns[BLACK], convert120To64(i));
         setBit(pawns[BOTH],  convert120To64(i));
       } else
-        bigPiece[color]++; // if (pieceBig[piece])
+        bigPiece[color]++;
 
       if (pieceMin[piece])
         minPiece[color]++;

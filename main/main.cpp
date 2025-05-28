@@ -1,22 +1,23 @@
 #include "init.hpp"
 
-void printBoard120(std::array<size_t, 120> b) {
+void printBoard120(auto b) {
   std::cout << "\n\nBoard120\n";
   for (int i = 0; i < largeNC; ++i) {
     if (i % 10 == 0)
       std::cout << "\n";
-    std::cout << std::setw(4) << b[i];
+    std::cout << std::setw(4) << static_cast<int>(b[i]) << ",";
   }
 }
 
-void printBoard64(std::array<size_t, 64> b) {
+void printBoard64(auto b) {
   std::cout << "\n\nBoard64\n";
   for (int i = 0; i < regularNC; ++i) {
     if (i % 8 == 0)
       std::cout << "\n";
-    std::cout << std::setw(4) << b[i];
+    std::cout << std::setw(4) << static_cast<int>(b[i]);
   }
 }
+
 
 // Two queens 8/8/8/2Q5/8/6q1/8/8 w - - 0 1
 // Two rooks  8/8/8/2r5/8/6R1/8/8 w - - 0 1
@@ -36,21 +37,13 @@ void printBoard64(std::array<size_t, 64> b) {
 // queens  6k1/8/4nq2/8/1nQ5/5N2/1N6/6K1 w - - 0 1
 // bishops 6k1/1b6/4n3/8/1n4B1/1B3N2/1N6/2b3K1 b - - 0 1
 
-struct A {
-  A() {}
-  int x = 0;
-};
-
-struct B {
-private:
-  A* a_;
-public:
-  B() : a_() {}
-  A* operator->() { return a_; }
-};
-
 
 int main() {
+  using cs = util::ñonsecutive_sequence<size_t, EMPTY, regularNC - 1>::type;
+  using reset = util::sequence_in_shell<size_t, cs, OFFBOARD>;
+  constexpr auto arr = reset::get();
+  printBoard120(arr);
+
 
   allInit();
 
@@ -61,10 +54,8 @@ int main() {
   board |= 1ull << convert120To64(G2);
   printBitBoard(board);
 
-  printBoard64(Board64);
-  printBoard120(Board120);
-  //printBoard120(bRanks);
-  //printBoard120(bFiles);
+  printBoard120(bRanks);
+  printBoard120(bFiles);
 
   //b.reset();
   b.check();
@@ -95,12 +86,3 @@ int main() {
   return 0;
 }
 
-// Next steps:
-// Do/Undo move
-//
-// Unit testing
-//
-// Evaluation
-// Search
-//
-// Connect GUI (uci)

@@ -157,7 +157,7 @@ void MoveList::GenerateAllMoves(const board::Board& b) {
   int side = b.getSide();
 
   // Pawns
-  if (side == WHITE) {
+  if (side == WHITE)
     for (int piece_num = 0; piece_num < b.getPieceNum(wP); ++piece_num) {
       int sq = b.getPieceListSq(wP, piece_num);
       
@@ -181,8 +181,7 @@ void MoveList::GenerateAllMoves(const board::Board& b) {
       if (sq + 11 == b.getEnPas())
         AddCapturedMove(b, Move(sq, sq + 11, EMPTY, EMPTY, en_pas));
     }
-  }
-  else {
+  else
     for (int pieceNum = 0; pieceNum < b.getPieceNum(bP); ++pieceNum) {
       int sq = b.getPieceListSq(bP, pieceNum);
 
@@ -206,7 +205,7 @@ void MoveList::GenerateAllMoves(const board::Board& b) {
       if (sq - 11 == b.getEnPas())
         AddCapturedMove(b, Move(sq, sq - 11, EMPTY, EMPTY, en_pas));
     }
-  }
+
 
   // Slide pieces
   static constexpr std::array<int, 8> loop_slide_piece{wB, wR, wQ, EMPTY,

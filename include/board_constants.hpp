@@ -2,7 +2,6 @@
 #define __CHESS_CONSTANTS_H__
 
 #include <array>
-#include <bitset>
 #include <string>
 #include <iostream>
 
@@ -34,11 +33,9 @@ enum {
 // 1011 - black queen can castle only to king's side, white can do both
 enum { WKC = 1, WQC = 2, BKC = 4, BQC = 8 };
 
-
 extern std::array<std::array<size_t, 120>, 13> pieceKeys;
 extern std::array<size_t, 16> castleKeys;
 extern size_t sideKey;
-
 
 // NC - Number of Cells
 constexpr int largeNC = 120;
@@ -56,8 +53,7 @@ constexpr std::array<unsigned char, regularNC> bitTable{
 constexpr std::string_view startPos =
     "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
-
-// Usage: pieceType[wK] == true/false
+// Usage: pieceType[piece] = true/false
 // Is current piece a big piece?
 constexpr std::array pieceBig{false, false, true, true, true, true, true,
                               false, true,  true, true, true, true};
@@ -105,28 +101,26 @@ constexpr std::array<bool, 13> pieceSlides{false, false, false, true,  true,
                                            true,  false, false, false, true,
                                            true,  true,  false};
 
-constexpr std::array<size_t, 8> knightMoves{-8, -19, -21, -12, 8, 19, 21, 12};
+constexpr std::array<int, 8> knightMoves {-8, -19, -21, -12, 8, 19, 21, 12};
 
-constexpr std::array<size_t, 8> kingMoves{-1, -10, 1, 10, -9, -11, 11, 9};
+constexpr std::array<int, 8> kingMoves {-1, -10, 1, 10, -9, -11, 11, 9};
 
-using unique_0 = util::unique_sequence<0, 8>::type;
+using unique_0 = util::unique_sequence<int, 0, 8>::type;
 
-constexpr std::array<std::array<size_t, 8>, 13> pieceDirections {
-  util::make_array_from_sequence(unique_0{}), // EMPTY
-
-  util::make_array_from_sequence(unique_0{}), // wP
-  knightMoves,                                // wN
-  { -9, -11, 11, 9, 0, 0, 0, 0},              // wB
-  { -1, -10, 1, 10, 0, 0, 0, 0},              // wR
-  kingMoves,                                  // wQ
-  kingMoves,                                  // wK
-
-  util::make_array_from_sequence(unique_0{}), // bP
-  knightMoves,                                // bN
-  { -9, -11, 11, 9, 0, 0, 0, 0},              // bB
-  { -1, -10, 1, 10, 0, 0, 0, 0},              // bR
-  kingMoves,                                  // bQ
-  kingMoves,                                  // bK
+constexpr std::array<std::array<int, 8>, 13> pieceDirections {
+  util::stoa(unique_0{}), // EMPTY
+  util::stoa(unique_0{}), // wP
+  knightMoves,            // wN
+  { -9, -11, 11, 9},      // wB
+  { -1, -10, 1, 10},      // wR
+  kingMoves,              // wQ
+  kingMoves,              // wK
+  util::stoa(unique_0{}), // bP
+  knightMoves,            // bN
+  { -9, -11, 11, 9},      // bB
+  { -1, -10, 1, 10},      // bR
+  kingMoves,              // bQ
+  kingMoves,              // bK
 };
 
 constexpr std::array<size_t, 13> directionNumber {
@@ -135,48 +129,34 @@ constexpr std::array<size_t, 13> directionNumber {
   0, 8, 4, 4, 8, 8
 };
 
-// Array that give back file from square
-template <size_t Start, size_t End> struct wrapped_concat_sequence {
-  using type =
-      typename util::concat<util::simple_sequence, Start, End, 8>::type;
-};
-
-using filesSequence =
-    typename util::sequence_in_shell<wrapped_concat_sequence,
-                                     FILE_A, FILE_H, OFFBOARD>;
-constexpr std::array<size_t, largeNC> bFiles = filesSequence{}.get();
+// Array that give back file from 120 index square
+using files           = util::n_sequences<util::ñonsecutive_sequence<unsigned char, 0, 7>::type, 8>::type;
+using files_shell     = util::sequence_in_shell<unsigned char, files, OFFBOARD>;
+constexpr auto bFiles = files_shell{}.get();
 
 // Array that give back rank from square
-template <size_t Start, size_t End> struct wrapped_columnar_sequence {
-  using type = typename util::columnar_sequence<Start, End, 8>::type;
-};
-
-using columnar_sequence_in_shell =
-    util::sequence_in_shell<wrapped_columnar_sequence, 
-                            RANK_1, RANK_8, OFFBOARD>;
-
-constexpr std::array<size_t, largeNC> bRanks =
-    columnar_sequence_in_shell{}.get();
+using ranks           = util::columnar_sequence<unsigned char, 0, 7, 8>::type;
+using ranks_shell     = util::sequence_in_shell<unsigned char, ranks, OFFBOARD>;
+constexpr auto bRanks = ranks_shell{}.get();
 
 // Array which contains mask to set each element in [0, 63] range
-using setSequence = typename util::sequence_with_shift<0, regularNC - 1>::type;
-constexpr std::array<size_t, regularNC> setMask =
-    util::make_array_from_sequence(setSequence{});
+using set_sequence = util::sequence_transform<size_t, util::shift<size_t>,
+                                              0, regularNC - 1>::type;
+constexpr auto setMask = util::stoa(set_sequence{});
 
 // Array which contains mask to clear each element in [0, 63] range
-using clearSequence =
-    typename util::sequence_with_tilda_shift<0, regularNC - 1>::type;
-constexpr std::array<size_t, regularNC> clearMask =
-    util::make_array_from_sequence(clearSequence{});
+using clear_sequence = util::sequence_transform<size_t, util::shift_with_tilda<size_t>,
+                                                0, regularNC - 1>::type;
+constexpr auto clearMask = util::stoa(clear_sequence{});
 
 // 120 index board
-using Sequence120 = util::sequence_in_shell<util::simple_sequence, 0, 63, 100>;
-constexpr std::array<size_t, largeNC> Board120 = Sequence120{}.get();
+using board120 = util::ñonsecutive_sequence<unsigned char, 0, 63>::type;
+using sequence120 = util::sequence_in_shell<unsigned char, board120, 100>;
+constexpr auto Board120 = sequence120{}.get();
 
 // 64 index board
-using Sequence64 = typename util::range_sequence_with_two_gaps<21, 98>::type;
-constexpr std::array<size_t, regularNC> Board64 =
-    util::make_array_from_sequence(Sequence64{});
+using sequence64 = util::sequence_with_two_gaps<unsigned char, 21, 98>::type;
+constexpr auto Board64 = util::stoa(sequence64{});
 
 
 // Basic conversion from [file, rank] to index of 120 squares board
@@ -187,7 +167,6 @@ inline size_t convert64To120(size_t sq) { return Board64[sq]; }
 
 // Convert index from 64 squares board to the index of 120 squares board
 inline size_t convert120To64(size_t sq) { return Board120[sq]; }
-
 
 // Printing the board to the console
 inline void printBitBoard(size_t bb) {
@@ -206,7 +185,6 @@ inline void printBitBoard(size_t bb) {
   }
 }
 
-
 // Returns position and delete the smallest bit in number
 inline size_t popBit(size_t &bb) {
   size_t b = bb ^ (bb - 1);
@@ -215,8 +193,8 @@ inline size_t popBit(size_t &bb) {
   return bitTable[static_cast<int>((fold * 0x783a9b23u) >> 26u)];
 }
 
-inline void clearBit(size_t &bb, size_t square) { bb &= clearMask[square]; }
+inline void clearBit(size_t& bb, size_t square) { bb &= clearMask[square]; }
 
-inline void setBit(size_t &bb, size_t square) { bb |= setMask[square]; }
+inline void setBit(size_t& bb, size_t square) { bb |= setMask[square]; }
 
 #endif // __CHESS_CONSTANTS_H__

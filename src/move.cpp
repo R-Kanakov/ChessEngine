@@ -3,8 +3,8 @@
 
 using namespace move;
 
-Move::Move(int from, int to, int captured, int promoted, int fl) : 
-  info(from | (to << 7) | (captured << 14) | (promoted << 20) | fl), score(0) {}
+Move::Move(int from, int to, int captured, int promoted, int flag) :
+  info(from | (to << 7) | (captured << 14) | (promoted << 20) | flag), score(0) {}
 
 int Move::getFrom() const { return info & 0x7f; }
 
@@ -90,57 +90,27 @@ void MoveList::AddEnPasMove(const board::Board& b, Move&& m) {
   push_back(m);;
 }
 
-void MoveList::AddWhitePawnMove(const board::Board& b, Move&& m, bool captured) {
+void MoveList::AddPawnMove(const board::Board& b, Move&& m, Color side, bool captured) {
   int from = m.getFrom();
   int to = m.getTo();
   int cap = captured ? m.getCaptured() : EMPTY;
 
   if (captured) {
-    if (bRanks[m.getFrom()] == RANK_7) {
-      AddCapturedMove(b, Move(from, to, cap, wQ));
-      AddCapturedMove(b, Move(from, to, cap, wR));
-      AddCapturedMove(b, Move(from, to, cap, wB));
-      AddCapturedMove(b, Move(from, to, cap, wN));
+    if (bRanks[m.getFrom()] == (side == WHITE ? RANK_7 : RANK_2)) {
+      AddCapturedMove(b, Move(from, to, cap, (side == WHITE ? wQ : bQ)));
+      AddCapturedMove(b, Move(from, to, cap, (side == WHITE ? wR : bR)));
+      AddCapturedMove(b, Move(from, to, cap, (side == WHITE ? wB : bB)));
+      AddCapturedMove(b, Move(from, to, cap, (side == WHITE ? wN : bN)));
     }
-    else {
+    else
       AddCapturedMove(b, Move(from, to, cap, EMPTY, 0));
-    }
   }
   else {
-    if (bRanks[m.getFrom()] == RANK_7) {
-      AddQuietMove(b, Move(from, to, cap, wQ));
-      AddQuietMove(b, Move(from, to, cap, wR));
-      AddQuietMove(b, Move(from, to, cap, wB));
-      AddQuietMove(b, Move(from, to, cap, wN));
-    }
-    else {
-      AddQuietMove(b, Move(from, to, cap, EMPTY, 0));
-    }
-  }
-}
-
-void MoveList::AddBlackPawnMove(const board::Board& b, Move&& m, bool captured) {
-  int from = m.getFrom();
-  int to = m.getTo();
-  int cap = captured ? m.getCaptured() : EMPTY;
-
-  if (captured) {
-    if (bRanks[m.getFrom()] == RANK_2) {
-      AddCapturedMove(b, Move(from, to, cap, bQ));
-      AddCapturedMove(b, Move(from, to, cap, bR));
-      AddCapturedMove(b, Move(from, to, cap, bB));
-      AddCapturedMove(b, Move(from, to, cap, bN));
-    }
-    else {
-      AddCapturedMove(b, Move(from, to, cap, EMPTY, 0));
-    }
-  }
-  else {
-    if (bRanks[m.getFrom()] == RANK_2) {
-      AddQuietMove(b, Move(from, to, cap, bQ));
-      AddQuietMove(b, Move(from, to, cap, bR));
-      AddQuietMove(b, Move(from, to, cap, bB));
-      AddQuietMove(b, Move(from, to, cap, bN));
+    if (bRanks[m.getFrom()] == (side == WHITE ? RANK_7 : RANK_2)) {
+      AddQuietMove(b, Move(from, to, cap, (side == WHITE ? wQ : bQ)));
+      AddQuietMove(b, Move(from, to, cap, (side == WHITE ? wR : bR)));
+      AddQuietMove(b, Move(from, to, cap, (side == WHITE ? wB : bB)));
+      AddQuietMove(b, Move(from, to, cap, (side == WHITE ? wN : bN)));
     }
     else {
       AddQuietMove(b, Move(from, to, cap, EMPTY, 0));
@@ -154,90 +124,103 @@ void MoveList::GenerateAllMoves(const board::Board& b) {
   b.check();
 
   int piece = EMPTY;
-  int side = b.getSide();
+  Color side = b.getSide();
 
   // Pawns
-  if (side == WHITE)
+  if (side == WHITE) {
     for (int piece_num = 0; piece_num < b.getPieceNum(wP); ++piece_num) {
       int sq = b.getPieceListSq(wP, piece_num);
-      
+
       if (b.getPiece(sq + 10) == EMPTY) {
-        AddWhitePawnMove(b, Move(sq, sq + 10), false);
+        AddPawnMove(b, Move(sq, sq + 10), WHITE, false);
         if (bRanks[sq] == RANK_2 && b.getPiece(sq + 20) == EMPTY)
           AddQuietMove(b, Move(sq, sq + 20, EMPTY, EMPTY, pawn_start));
       }
 
-
       if (Board120[sq + 9] != OFFBOARD && pieceCol[b.getPiece(sq + 9)] == BLACK)
-        AddWhitePawnMove(b, Move(sq, sq + 9, b.getPiece(sq + 9)), true);
+        AddPawnMove(b, Move(sq, sq + 9, b.getPiece(sq + 9)), WHITE, true);
 
       if (Board120[sq + 11] != OFFBOARD && pieceCol[b.getPiece(sq + 11)] == BLACK)
-        AddWhitePawnMove(b, Move(sq, sq + 11, b.getPiece(sq + 11)), true);
-    
+        AddPawnMove(b, Move(sq, sq + 11, b.getPiece(sq + 11)), WHITE, true);
 
-      if (sq + 9 == b.getEnPas())
-        AddCapturedMove(b, Move(sq, sq + 9, EMPTY, EMPTY, en_pas));
+      if (b.getEnPas() != NO_SQ) {
+        if (sq + 9 == b.getEnPas())
+          AddEnPasMove(b, Move(sq, sq + 9, EMPTY, EMPTY, en_pas));
 
-      if (sq + 11 == b.getEnPas())
-        AddCapturedMove(b, Move(sq, sq + 11, EMPTY, EMPTY, en_pas));
+        if (sq + 11 == b.getEnPas())
+          AddEnPasMove(b, Move(sq, sq + 11, EMPTY, EMPTY, en_pas));
+      }
     }
-  else
+
+    if ((b.getCastlePerm() & WKC) && 
+        (b.getPiece(F1) == EMPTY && b.getPiece(G1) == EMPTY) &&
+        (!b.isAttacked(E1, BLACK) && !b.isAttacked(F1, BLACK)))
+      AddQuietMove(b, Move(E1, G1, EMPTY, EMPTY, castle));
+    
+    if ((b.getCastlePerm() & WQC) &&
+        (b.getPiece(D1) == EMPTY && b.getPiece(C1) == EMPTY && b.getPiece(B1) == EMPTY) &&
+        (!b.isAttacked(D1, BLACK) && !b.isAttacked(C1, BLACK) && !b.isAttacked(B1, BLACK)))
+      AddQuietMove(b, Move(E1, C1, EMPTY, EMPTY, castle));
+  }
+  else {
     for (int pieceNum = 0; pieceNum < b.getPieceNum(bP); ++pieceNum) {
       int sq = b.getPieceListSq(bP, pieceNum);
 
       if (b.getPiece(sq - 10) == EMPTY) {
-        AddBlackPawnMove(b, Move(sq, sq - 10), false);
+        AddPawnMove(b, Move(sq, sq - 10), BLACK, false);
         if (bRanks[sq] == RANK_7 && b.getPiece(sq - 20) == EMPTY)
           AddQuietMove(b, Move(sq, sq - 20, EMPTY, EMPTY, pawn_start));
       }
 
-
       if (Board120[sq - 9] != OFFBOARD && pieceCol[b.getPiece(sq - 9)] == WHITE)
-        AddBlackPawnMove(b, Move(sq, sq - 9, b.getPiece(sq - 9)), true);
+        AddPawnMove(b, Move(sq, sq - 9, b.getPiece(sq - 9)), BLACK, true);
 
       if (Board120[sq - 11] != OFFBOARD && pieceCol[b.getPiece(sq - 11)] == WHITE)
-        AddBlackPawnMove(b, Move(sq, sq - 11, b.getPiece(sq - 11)), true);
+        AddPawnMove(b, Move(sq, sq - 11, b.getPiece(sq - 11)), BLACK, true);
 
+      if (b.getEnPas() != NO_SQ) {
+        if (sq - 9 == b.getEnPas())
+          AddEnPasMove(b, Move(sq, sq - 9, EMPTY, EMPTY, en_pas));
 
-      if (sq - 9 == b.getEnPas())
-        AddCapturedMove(b, Move(sq, sq - 9, EMPTY, EMPTY, en_pas));
-
-      if (sq - 11 == b.getEnPas())
-        AddCapturedMove(b, Move(sq, sq - 11, EMPTY, EMPTY, en_pas));
+        if (sq - 11 == b.getEnPas())
+          AddEnPasMove(b, Move(sq, sq - 11, EMPTY, EMPTY, en_pas));
+      }
     }
+    
+    if ((b.getCastlePerm() & BKC) &&
+        (b.getPiece(F8) == EMPTY && b.getPiece(G8) == EMPTY) &&
+        (!b.isAttacked(E8, WHITE) && !b.isAttacked(F8, WHITE)))
+      AddQuietMove(b, Move(E8, G8, EMPTY, EMPTY, castle));
 
+    if ((b.getCastlePerm() & BQC) &&
+        (b.getPiece(D8 == EMPTY) && b.getPiece(C8) == EMPTY && b.getPiece(B8) == EMPTY) &&
+        (!b.isAttacked(D8, WHITE) && !b.isAttacked(C8, WHITE) && !b.isAttacked(B8, WHITE)))
+      AddQuietMove(b, Move(E8, C8, EMPTY, EMPTY, castle));
+  }
 
   // Slide pieces
   static constexpr std::array<int, 8> loop_slide_piece{wB, wR, wQ, EMPTY,
                                                        bB, bR, bQ, EMPTY};
-
   static constexpr std::array<int, 2> loop_slide_index{0, 4};
   
   for (int piece_index = loop_slide_index[side], piece = loop_slide_piece[piece_index];
        piece != EMPTY;
        ++piece_index, piece = loop_slide_piece[piece_index]) {
-    // std::cout << "sliders piece index is " << piece_index << ", piece is " << piece << "\n";
-
     for (int piece_num = 0; piece_num < b.getPieceNum(piece); ++piece_num) {
       int sq = b.getPieceListSq(piece, piece_num);
-      // cout what piece it is and on what square its on
-      std::cout << "Piece is " << piece << " square is " << getDumpSquare(sq) << "\n";
 
       for (int i = 0; i < directionNumber[piece]; ++i) {
         int dir = pieceDirections[piece][i];
         int target_sq = sq + dir;
 
-        int target_piece = b.getPiece(target_sq);
-
-        while (target_piece == OFFBOARD) {
+        while (bFiles[target_sq] != OFFBOARD) {
+          int target_piece = b.getPiece(target_sq);
           if (target_piece != EMPTY) {
-            // We get opposite color:
-            // WHITE ^ 1 == BLACK
-            if (pieceCol[target_piece] == (side ^ 1))
-              std::cout << "\t\tCapture on " << getDumpSquare(target_sq) << "\n";
+            if (pieceCol[target_piece] == (side ^ 1)) // WHITE ^ 1 == BLACK
+              AddCapturedMove(b, Move(sq, target_sq, b.getPiece(target_sq)));
             break;
           }
-          std::cout << "\t\tGenerate normal move on " << getDumpSquare(target_sq) << "\n";
+          AddQuietMove(b, Move(sq, target_sq));
           target_sq += dir;
         }
       }
@@ -247,18 +230,13 @@ void MoveList::GenerateAllMoves(const board::Board& b) {
   // Non-slide pieces
   static constexpr std::array<int, 6> loop_piece{wN, wK, EMPTY,
                                                  bN, bK, EMPTY};
-
   static constexpr std::array<int, 2> loop_index{0, 3};
 
   for (int piece_index = loop_index[side], piece = loop_piece[piece_index];
        piece != EMPTY;
        ++piece_index, piece = loop_piece[piece_index]) {
-    // std::cout << "non-sliders piece index is " << piece_index << ", piece is " << piece << "\n";
-
     for (int piece_num = 0; piece_num < b.getPieceNum(piece); ++piece_num) {
       int sq = b.getPieceListSq(piece, piece_num);
-      // cout what piece it is and on what square its on
-      std::cout << "Piece is " << piece << " square is " << getDumpSquare(sq) << "\n";
 
       for (int i = 0; i < directionNumber[piece]; ++i) {
         int dir = pieceDirections[piece][i];
@@ -268,15 +246,12 @@ void MoveList::GenerateAllMoves(const board::Board& b) {
 
         if (target_piece == OFFBOARD)
           continue;
-
-        if (target_piece != EMPTY) {
-          // We get opposite color:
-          // WHITE ^ 1 == BLACK
-          if (pieceCol[target_piece] == (side ^ 1))
-            std::cout << "\t\tCapture on " << getDumpSquare(target_sq) << "\n";
-          continue;
+        else if (target_piece != EMPTY) {
+          if (pieceCol[target_piece] == (side ^ 1)) // WHITE ^ 1 == BLACK
+            AddCapturedMove(b, Move(sq, target_sq, b.getPiece(target_sq)));
         }
-        std::cout << "\t\tGenerate normal move on " << getDumpSquare(target_sq) << "\n";
+        else
+          AddQuietMove(b, Move(sq, target_sq));
       }
     }
   }

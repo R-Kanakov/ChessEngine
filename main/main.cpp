@@ -1,5 +1,7 @@
 #include "init.hpp"
 
+// TODO: move this all to tests
+
 void printBoard120(auto b) {
   std::cout << "\n\nBoard120\n";
   for (int i = 0; i < largeNC; ++i) {
@@ -37,25 +39,21 @@ void printBoard64(auto b) {
 // queens  6k1/8/4nq2/8/1nQ5/5N2/1N6/6K1 w - - 0 1
 // bishops 6k1/1b6/4n3/8/1n4B1/1B3N2/1N6/2b3K1 b - - 0 1
 
+// castle1 r3k2r/8/8/8/8/8/8/R3K2R b KQkq - 0 1
+// castle2 3rk2r/8/8/8/8/8/6p1/R3K2R w KQkq - 0 1
+// castle3 r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1
+
 
 int main() {
-  using cs = util::ñonsecutive_sequence<size_t, EMPTY, regularNC - 1>::type;
-  using reset = util::sequence_in_shell<size_t, cs, OFFBOARD>;
-  constexpr auto arr = reset::get();
-  printBoard120(arr);
-
-
   allInit();
 
-  board::Board b("rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq d6 0 2");
+  board::Board b("rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQKq d6 0 2");
   b.dump(std::cout);
 
   size_t board = 0;
   board |= 1ull << convert120To64(G2);
   printBitBoard(board);
 
-  printBoard120(bRanks);
-  printBoard120(bFiles);
 
   //b.reset();
   b.check();
@@ -73,7 +71,7 @@ int main() {
   std::cout << "Algebraic to: " << move::getDumpSquare(to) << "\n";
   std::cout << "Algebraic move: " << m.getDumpMove() << "\n";
 
-  b.parseFEN("5k2/1n6/4n3/6N1/8/3N4/8/5K2 w - - 0 1");
+  b.parseFEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
   b.dump(std::cout);
   b.check();
 

@@ -10,6 +10,9 @@
  * Probably the best option to divide instatitions to the maximum possible step
  * (the big problem is to know how can it be for arbitrary template)
  * and concatenate all of them via `concat_sequences`.)
+ * One more idea of usage is to create simple sequence and than do
+ * seq -> transform -> transform -> ... -> in_shell
+ * in compile time
  */
 
 

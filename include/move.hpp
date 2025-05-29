@@ -13,7 +13,7 @@ namespace board { class Board; }
 namespace move {
  /*
   * We will coding one bit with all information of the move we need
-  * Bits equaled to one are the bits that will define the word to the right
+  * Bits equaled to one are the bits that will define the word bellow
   
   * 0000 0000 0000 0000 0000 0111 1111
   * Position from; to get we use       -> & 0x7F
@@ -37,6 +37,7 @@ namespace move {
   * Castle;                            -> 0x1000000
   */
 
+  // Some flags (it will be used in Move constructor)
   constexpr int en_pas     = 0x40000;
   constexpr int pawn_start = 0x80000;
   constexpr int castle     = 0x1000000;
@@ -49,7 +50,7 @@ namespace move {
   public:
     Move() : info(0), score(0) {}
     Move(int i) : info(i), score(0) {}
-    Move(int from, int to, int captured = 0, int promoted = 0, int fl = 0);
+    Move(int from, int to, int captured = 0, int promoted = 0, int flag = 0);
 
     std::string getDumpMove();
 
@@ -80,8 +81,7 @@ namespace move {
     void AddCapturedMove(const board::Board& b, Move&& m);
     void AddEnPasMove(const board::Board& b, Move&& m);
 
-    void AddWhitePawnMove(const board::Board& b, Move&& m, bool captured);
-    void AddBlackPawnMove(const board::Board& b, Move&& m, bool captured);
+    void AddPawnMove(const board::Board& b, Move&& m, Color side, bool captured);
   public:
     MoveList() : count(0) {}
 

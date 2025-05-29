@@ -28,16 +28,16 @@ class Board {
   std::array<unsigned char, 2> kings;
 
   // See Color enum
-  int side;
+  Color side;
 
-  // Place where en passant is possible
+  // Place where en passant move is possible
   size_t enPas;
 
   // Counter from 0 to 50
   unsigned char fiftyMove;
 
   // Will be used with castle enum
-  int castlePerm;
+  unsigned char castlePerm;
 
   // Amount half move in the current search
   // (1 move is the action of white and black, ply - only white)
@@ -86,13 +86,16 @@ public:
 
   // Getters
 public:
-  int getSide() const { return side; }
-  unsigned char getPieceNum(int piece) const { return pieceNum[piece]; }
+  Color getSide() const { return side; }
+  size_t getPiece(int square) const { return board[square]; }
+  size_t getEnPas() const { return enPas; }
+  unsigned char getPieceNum(int piece) const {
+    return pieceNum[piece];
+  }
   unsigned char getPieceListSq(int side, int num) const {
     return pieceList[side][num];
   }
-  size_t getPiece(int square) const { return board[square]; }
-  size_t getEnPas() const { return enPas; }
+  unsigned char getCastlePerm() const { return castlePerm; };
 
   // Public methods
 public:
@@ -115,7 +118,7 @@ public:
   void check() const;
 
   // Checking is square attacked by side
-  bool isAttacked(const int sq, const unsigned char side) const;
+  bool isAttacked(const int sq, const Color side) const;
 };
 
 } // namespace board

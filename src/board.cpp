@@ -22,7 +22,6 @@ void Board::reset() {
   enPas      = NO_SQ;
   fiftyMove  = 0;
   castlePerm = 0;
-
   ply    = 0;
   hisPly = 0;
   posKey = 0ull;
@@ -277,7 +276,7 @@ void Board::check() const {
 #endif
 }
 
-bool Board::isAttacked(const int sq, const unsigned char side) const {
+bool Board::isAttacked(const int sq, const Color side) const {
   // Pawns
   if (side == WHITE) {
     if (board[sq - 11] == wP || board[sq - 9] == wP)

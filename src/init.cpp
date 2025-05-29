@@ -1,3 +1,5 @@
+#include <random>
+
 #include "init.hpp"
 
 std::array<std::array<size_t, 120>, 13> pieceKeys;
@@ -16,7 +18,6 @@ void initHash() {
   for (int i = 0; i < 13; ++i)
     std::generate(pieceKeys[i].begin(), pieceKeys[i].end(),
                   [&d = dis, &m = mersenne]() { return d(m); });
-
 }
 
 void allInit() {

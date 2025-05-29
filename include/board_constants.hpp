@@ -7,16 +7,14 @@
 
 #include "util.hpp"
 
-// Color
-enum { WHITE, BLACK, BOTH };
+enum Color { WHITE, BLACK, BOTH };
 
-enum { EMPTY, wP, wN, wB, wR, wQ, wK, bP, bN, bB, bR, bQ, bK };
+enum Piece { EMPTY, wP, wN, wB, wR, wQ, wK, bP, bN, bB, bR, bQ, bK };
 
-enum { FILE_A, FILE_B, FILE_C, FILE_D, FILE_E, FILE_F, FILE_G, FILE_H };
-enum { RANK_1, RANK_2, RANK_3, RANK_4, RANK_5, RANK_6, RANK_7, RANK_8 };
+enum Files { FILE_A, FILE_B, FILE_C, FILE_D, FILE_E, FILE_F, FILE_G, FILE_H };
+enum Ranks { RANK_1, RANK_2, RANK_3, RANK_4, RANK_5, RANK_6, RANK_7, RANK_8 };
 
-// Cells enum
-enum {
+enum Cell {
   A1 = 21, B1, C1, D1, E1, F1, G1, H1,
   A2 = 31, B2, C2, D2, E2, F2, G2, H2,
   A3 = 41, B3, C3, D3, E3, F3, G3, H3,
@@ -31,7 +29,7 @@ enum {
 
 // Each bit determines the possibility if castling
 // 1011 - black queen can castle only to king's side, white can do both
-enum { WKC = 1, WQC = 2, BKC = 4, BQC = 8 };
+enum CastlePerm { WKC = 1, WQC = 2, BKC = 4, BQC = 8 };
 
 extern std::array<std::array<size_t, 120>, 13> pieceKeys;
 extern std::array<size_t, 16> castleKeys;
@@ -71,8 +69,9 @@ constexpr std::array pieceMin{false, false, true, true,  false, false, false,
 // rook = 550, queen = 1000, king = INT_MAX
 constexpr std::array pieceVal{0,   100, 325, 325, 550,  1000, INT_MAX,
                               100, 325, 325, 550, 1000, INT_MAX};
+
 // What color is piece
-constexpr std::array<unsigned char, 13> pieceCol{
+constexpr std::array<Color, 13> pieceCol{
     BOTH,  WHITE, WHITE, WHITE, WHITE, WHITE, WHITE,
     BLACK, BLACK, BLACK, BLACK, BLACK, BLACK};
 

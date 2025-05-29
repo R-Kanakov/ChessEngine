@@ -1,5 +1,7 @@
-#ifndef __CHESS_CONSTANTS_H__
-#define __CHESS_CONSTANTS_H__
+// Licensed after GNU GPL v3v
+
+#ifndef __BOARD_CONSTANTS_HPP__
+#define __BOARD_CONSTANTS_HPP__
 
 #include <array>
 #include <string>
@@ -196,4 +198,4 @@ inline void clearBit(size_t& bb, size_t square) { bb &= clearMask[square]; }
 
 inline void setBit(size_t& bb, size_t square) { bb |= setMask[square]; }
 
-#endif // __CHESS_CONSTANTS_H__
+#endif // __BOARD_CONSTANTS_HPP__

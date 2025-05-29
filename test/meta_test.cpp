@@ -1,3 +1,5 @@
+// Licensed after GNU GPL v3
+
 #include <gtest/gtest.h>
 
 #include "../include/util.hpp"

@@ -1,3 +1,5 @@
+# Licensed after GNU GPL v3
+
 cmake_minimum_required(VERSION 3.11)
 
 set(PROJECT_NAME Chess_Engine)

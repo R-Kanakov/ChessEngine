@@ -1,7 +1,8 @@
-#ifndef __BOARD_H__
-#define __BOARD_H__
+// Licensed after GNU GPL v3
 
-#include <cassert>
+#ifndef __BOARD_HPP__
+#define __BOARD_HPP__
+
 #include <iomanip>
 #include <iostream>
 #include <unordered_map>
@@ -123,4 +124,4 @@ public:
 
 } // namespace board
 
-#endif // __BOARD_H__
+#endif // __BOARD_HPP__

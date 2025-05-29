@@ -1,3 +1,5 @@
+# Licensed after GNU GPL v3
+
 file(GLOB testfiles "*.cpp")
 
 list(REMOVE_ITEM testfiles "${CMAKE_CURRENT_SOURCE_DIR}/run_tests.cpp")

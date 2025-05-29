@@ -1,3 +1,5 @@
+// Licensed after GNU GPL v3
+
 #include "move.hpp"
 #include "board.hpp"
 

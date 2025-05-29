@@ -1,3 +1,5 @@
+# Licensed after GNU GPL v3
+
 if(MSVC)
     option(gtest_force_shared_crt "" TRUE)
 endif(MSVC)

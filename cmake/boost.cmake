@@ -1,3 +1,5 @@
+# Licensed after GNU GPL v3
+
 include(ExternalProject)
 
 set(BOOST_SOURCE_DIR ${CMAKE_SOURCE_DIR}/3dparty/boost)

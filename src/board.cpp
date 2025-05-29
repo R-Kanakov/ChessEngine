@@ -1,4 +1,7 @@
+// Licensed after GNU GPL v3
+
 #include <bit>
+#include <cassert>
 
 #include "board.hpp"
 

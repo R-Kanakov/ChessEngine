@@ -1,6 +1,8 @@
+// Licensed after GNU GPL v3
+
 #include "init.hpp"
 
-// TODO: move this all to tests
+// TODO: move all checks to tests
 
 void printBoard120(auto b) {
   std::cout << "\n\nBoard120\n";

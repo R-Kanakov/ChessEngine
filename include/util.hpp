@@ -1,3 +1,5 @@
+// Licensed after GNU GPL v3
+
 /*
  * Remark:
  * The code provided here is not mandatory, as it can be replaced in board.hpp
@@ -16,13 +18,11 @@
  */
 
 
-#ifndef __UTIL_H__
-#define __UTIL_H__
+#ifndef __UTIL_HPP__
+#define __UTIL_HPP__
 
-#include <algorithm>
 #include <array>
 #include <concepts>
-#include <iostream>
 
 namespace util {
 template <std::integral T, T... Nums> struct sequence {
@@ -296,4 +296,4 @@ struct Sqrt : std::integral_constant < T,
   };
 } // namespace util
 
-#endif // __UTIL_H__
+#endif // __UTIL_HPP__

@@ -29,7 +29,4 @@ add_executable(${PROJECT_NAME} main/main.cpp)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE chesslib)
 
-#include_directories(3dparty)
-#include_directories(test)
-
 add_subdirectory(test)

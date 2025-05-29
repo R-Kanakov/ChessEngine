@@ -33,7 +33,7 @@ INSTALL_COMMAND ""
 BUILD_IN_SOURCE 1
 )
 
-ExternalProject_Get_Property(chess_engine_boost INSTALL_DIR) # change to BOOST_INSTALL_DIR
+ExternalProject_Get_Property(chess_engine_boost INSTALL_DIR)
 set(BOOST_INSTALL_DIR ${INSTALL_DIR})
 
 add_library(boost INTERFACE)

@@ -35,12 +35,12 @@ TEST(meta_test, existence_of_type_2) {
 }
 
 TEST(meta_test, existence_of_type_3) {
-  using cs = util::Òonsecutive_sequence<int, 1, 10>;
+  using cs = util::—Åonsecutive_sequence<int, 1, 10>;
   ASSERT_TRUE(util::has_typedef_type<cs>::value);
 }
 
 TEST(meta_test, two_closest_production_1) {
-  using cs = util::Òonsecutive_sequence<int, 1, 10>::type;
+  using cs = util::—Åonsecutive_sequence<int, 1, 10>::type;
   constexpr size_t size = cs {}.size();
   constexpr auto p = util::find_pair<size>();
 
@@ -49,7 +49,7 @@ TEST(meta_test, two_closest_production_1) {
 }
 
 TEST(meta_test, two_closest_production_2) {
-  using cs = util::Òonsecutive_sequence<int, 1, 15>::type;
+  using cs = util::—Åonsecutive_sequence<int, 1, 15>::type;
   constexpr size_t size = cs {}.size();
   constexpr auto p = util::find_pair<size>();
 
@@ -58,7 +58,7 @@ TEST(meta_test, two_closest_production_2) {
 }
 
 TEST(meta_test, two_closest_production_3) {
-  using cs = util::Òonsecutive_sequence<int, 0, 63>::type;
+  using cs = util::—Åonsecutive_sequence<int, 0, 63>::type;
   constexpr size_t size = cs {}.size();
   constexpr auto p = util::find_pair<size>();
 

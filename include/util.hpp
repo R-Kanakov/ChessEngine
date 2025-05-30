@@ -3,18 +3,20 @@
 /*
  * Remark:
  * The code provided here is not mandatory, as it can be replaced in board.hpp
- * with a simple initializer lists. The primary purpose of this code is to
- * practice meta-template programming and make the code more "genelized".
+ * with a simple initializer lists (std::array doesn't have constructor from
+ * std::initializer_list, only direct init).
+ * The primary purpose of this code is to practice meta-template programming
+ * and make the code more "genelized".
  * Overall, the technique used here can be efficient for large constexpr arrays.
- * (Not really for now because of compiler constraint:
+ * Not really for now because of compiler constraint:
  * "recursive template instantiation exceeded maximum depth of 1024".
- * Can be fixed via -ftemplate-depth=10000 flag, but it works really bad.
+ * Can be fixed via -ftemplate-depth=10000 (clang++) flag, but it works really bad.
  * Probably the best option to divide instatitions to the maximum possible step
- * (the big problem is to know how can it be for arbitrary template)
- * and concatenate all of them via `concat_sequences`.)
- * One more idea of usage is to create simple sequence and than do
+ * (the big problem is to know how can it be for arbitrary recursive template)
+ * and concatenate all of them via `concat_sequences`.
+ * One more idea of usage is to create some simple sequence and than do
  * seq -> transform -> transform -> ... -> in_shell
- * in compile time
+ * in compile time.
  */
 
 
@@ -35,7 +37,7 @@ template <std::integral T, T... Nums> struct sequence {
   }
 };
 
-
+// Sequence to array
 template <std::integral T, T... Nums>
 consteval auto stoa(sequence<T, Nums...>) {
   return std::array<T, sizeof...(Nums)>{{Nums...}};
@@ -46,11 +48,11 @@ consteval auto stoa(sequence<T, Nums...>) {
 template <std::integral T, T N, T L = 1, T H = N, T mid = (L + H + 1) / 2>
 struct Sqrt : std::integral_constant < T,
   std::conditional_t<
-  (N < mid* mid),
-  Sqrt<T, N, L, mid - 1>,
-  Sqrt<T, N, mid, H>
-  >{}
-  > {};
+    (N < mid* mid),
+      Sqrt<T, N, L, mid - 1>,
+      Sqrt<T, N, mid, H>
+    >{}
+  >{};
 
   template <std::integral T, T N, T S>
   struct Sqrt<T, N, S, S, S> : std::integral_constant<T, S> {};
@@ -59,7 +61,7 @@ struct Sqrt : std::integral_constant < T,
   // Check if number is prime
   template <size_t N, size_t I = 2> struct is_prime {
     static constexpr bool value = (N > I) && (N % I != 0) &&
-      is_prime<N, I + 1>::value;
+                                  is_prime<N, I + 1>::value;
   };
   //                                     Sqrt<N>> {
   template <size_t N> struct is_prime<N, N> {
@@ -73,8 +75,7 @@ struct Sqrt : std::integral_constant < T,
   struct has_typedef_type : std::false_type {};
 
   template <typename Seq>
-  struct has_typedef_type<Seq,
-    std::void_t<typename Seq::type>>
+  struct has_typedef_type<Seq, std::void_t<typename Seq::type>>
     : std::true_type {};
 
 
@@ -117,14 +118,15 @@ struct Sqrt : std::integral_constant < T,
     static_assert(Start < End);
     using type = typename std::conditional_t<
       (End > Start),
-      typename std::conditional_t<
-      (End % 10 != (Start + 9) % 10) && (End % 10 != (Start + 8) % 10),
-      typename sequence_with_two_gaps<T, Start, End - 1>::type::template append<End>,
-      typename sequence_with_two_gaps<T, Start, End - 1>::type>,
-      sequence<T>>;
+        typename std::conditional_t<
+          (End % 10 != (Start + 9) % 10) && (End % 10 != (Start + 8) % 10),
+          typename sequence_with_two_gaps<T, Start, End - 1>::type::template append<End>,
+          typename sequence_with_two_gaps<T, Start, End - 1>::type>,
+        sequence<T>>;
   };
 
-  template <std::integral T, T Start> struct sequence_with_two_gaps<T, Start, Start> {
+  template <std::integral T, T Start>
+  struct sequence_with_two_gaps<T, Start, Start> {
     using type = sequence<T, Start>;
   };
 
@@ -140,7 +142,7 @@ struct Sqrt : std::integral_constant < T,
   // (which are really used in it) mustn't be a prime number
 
   // This will be clearer with an example:
-  // Input is a `Òonsecutive_sequence` (or any other) from 1 to 4,
+  // Input is a `—Åonsecutive_sequence` (or any other) from 1 to 4,
   // 5 will be shell number
 
   // 5  5  5  5
@@ -153,7 +155,7 @@ struct Sqrt : std::integral_constant < T,
   // concept for sequence_in_shell
   template <typename T, typename Seq>
   concept SequenceCheck = is_instance_of<Seq>::value &&
-    !(is_prime<Seq::size()>::value);
+                          !(is_prime<Seq::size()>::value);
 
   // Main algorithm to create sequence in a shell
   template <std::integral T, typename Seq, T shellNum>
@@ -164,10 +166,10 @@ struct Sqrt : std::integral_constant < T,
     static constexpr auto pair = find_pair<size_>();
 
     static constexpr size_t rows = pair.first,
-      cols = pair.second,
-      totalRows = rows + shellRows * 2,
-      totalCols = cols + shellCols * 2,
-      total = totalCols * totalRows;
+                            cols = pair.second,
+                            totalRows = rows + shellRows * 2,
+                            totalCols = cols + shellCols * 2,
+                            total = totalCols * totalRows;
 
     static consteval auto get() {
       std::array<T, size_> seq = stoa(Seq {});
@@ -177,7 +179,6 @@ struct Sqrt : std::integral_constant < T,
         if (i < shellRows * totalCols + shellCols)
           arr[i] = shellNum;
         else {
-
           constexpr auto is_in_range = [](size_t i) {
             for (size_t j = 0; j < rows; ++j) {
               size_t lower = j * totalCols + shellRows * totalCols + shellCols;
@@ -186,7 +187,7 @@ struct Sqrt : std::integral_constant < T,
                 return std::make_pair(true, j);
             }
             return std::make_pair(false, size_t {0});
-            };
+          };
 
           auto [in_range, j] = is_in_range(i);
 
@@ -195,9 +196,8 @@ struct Sqrt : std::integral_constant < T,
                                 j * 2 * shellCols);
             arr[i] = seq[index];
           }
-          else {
+          else
             arr[i] = shellNum;
-          }
         }
       }
       return arr;
@@ -210,7 +210,7 @@ struct Sqrt : std::integral_constant < T,
   struct sequence_transform {
     static_assert(Start < End);
     using type = typename sequence_transform<T, transform, Start, End - 1>
-      ::type::template append<transform(End)>;
+                          ::type::template append<transform(End)>;
   };
 
   template <std::integral T, auto transform, T Start>
@@ -230,14 +230,13 @@ struct Sqrt : std::integral_constant < T,
 
   // ----------------------------Consecutive sequence----------------------------
   template <std::integral T, T Start, T End>
-  struct Òonsecutive_sequence {
+  struct —Åonsecutive_sequence {
     static_assert(Start < End);
-
-    using type = Òonsecutive_sequence<T, Start, End - 1>::type::template append<End>;
+    using type = —Åonsecutive_sequence<T, Start, End - 1>::type::template append<End>;
   };
 
   template <std::integral T, T Start>
-  struct Òonsecutive_sequence<T, Start, Start> {
+  struct —Åonsecutive_sequence<T, Start, Start> {
     using type = sequence<T, Start>;
   };
 

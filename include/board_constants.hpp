@@ -131,7 +131,7 @@ constexpr std::array<size_t, 13> directionNumber {
 };
 
 // Array that give back file from 120 index square
-using files           = util::n_sequences<util::Òonsecutive_sequence<unsigned char, 0, 7>::type, 8>::type;
+using files           = util::n_sequences<util::—Åonsecutive_sequence<unsigned char, 0, 7>::type, 8>::type;
 using files_shell     = util::sequence_in_shell<unsigned char, files, OFFBOARD>;
 constexpr auto bFiles = files_shell{}.get();
 
@@ -151,7 +151,7 @@ using clear_sequence = util::sequence_transform<size_t, util::shift_with_tilda<s
 constexpr auto clearMask = util::stoa(clear_sequence{});
 
 // 120 index board
-using board120 = util::Òonsecutive_sequence<unsigned char, 0, 63>::type;
+using board120 = util::—Åonsecutive_sequence<unsigned char, 0, 63>::type;
 using sequence120 = util::sequence_in_shell<unsigned char, board120, 100>;
 constexpr auto Board120 = sequence120{}.get();
 

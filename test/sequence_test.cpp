@@ -5,7 +5,7 @@
 #include "../include/util.hpp"
 
 TEST(sequence_test, sequence_size) {
-  using cs = util::Òonsecutive_sequence<int, 1, 10>::type;
+  using cs = util::—Åonsecutive_sequence<int, 1, 10>::type;
   constexpr size_t N = cs{}.size();
   ASSERT_EQ(N, 10);
 }
@@ -34,8 +34,8 @@ TEST(sequence_test, sequence_with_two_gaps_2) {
   ASSERT_EQ(arr_1, arr_2);
 }
 
-TEST(sequence_test, Òonsecutive_sequence) {
-  using cs = util::Òonsecutive_sequence<int, 1, 10>::type;
+TEST(sequence_test, —Åonsecutive_sequence) {
+  using cs = util::—Åonsecutive_sequence<int, 1, 10>::type;
   constexpr auto arr = util::stoa(cs{});
   constexpr std::array<int, 10> expected {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 
@@ -43,7 +43,7 @@ TEST(sequence_test, Òonsecutive_sequence) {
 }
 
 TEST(sequence_test, sequence_in_shell) {
-  using cs = util::Òonsecutive_sequence<int, 1, 4>::type;
+  using cs = util::—Åonsecutive_sequence<int, 1, 4>::type;
   using cs_in_shell = util::sequence_in_shell<int, cs, 5>;
   constexpr auto arr = cs_in_shell{}.get();
 
@@ -77,7 +77,7 @@ TEST(sequence_test, sequence_transform_2) {
 }
 
 TEST(sequence_test, sequence_concat_1) {
-  using cs = util::Òonsecutive_sequence<int, 1, 4>::type;
+  using cs = util::—Åonsecutive_sequence<int, 1, 4>::type;
   using concat_5_cs = util::n_sequences<cs, 5>::type;
   constexpr auto arr = util::stoa(concat_5_cs{});
   constexpr std::array<int, 20> expected{1, 2, 3, 4,

@@ -8,7 +8,7 @@
 using namespace board;
 
 void Board::reset() {
-  using cs = util::Òonsecutive_sequence<size_t, EMPTY, regularNC - 1>::type;
+  using cs = util::—Åonsecutive_sequence<size_t, EMPTY, regularNC - 1>::type;
   using reset = util::sequence_in_shell<size_t, cs, OFFBOARD>;
   board = reset::get();
 

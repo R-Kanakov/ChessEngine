@@ -37,7 +37,7 @@ TEST(board_constants_test, board120) {
 }
 
 TEST(board_constants_test, board) {
-  using cs = util::Òonsecutive_sequence<size_t, EMPTY, regularNC - 1>::type;
+  using cs = util::—Åonsecutive_sequence<size_t, EMPTY, regularNC - 1>::type;
   using reset = util::sequence_in_shell<size_t, cs, OFFBOARD>;
   constexpr auto arr = reset::get();
 

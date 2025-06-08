@@ -34,7 +34,7 @@ TEST(sequence_test, sequence_with_two_gaps_2) {
   ASSERT_EQ(arr_1, arr_2);
 }
 
-TEST(sequence_test, сonsecutive_sequence) {
+TEST(sequence_test, consecutive_sequence) {
   using cs = util::сonsecutive_sequence<int, 1, 10>::type;
   constexpr auto arr = util::stoa(cs{});
   constexpr std::array<int, 10> expected {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};

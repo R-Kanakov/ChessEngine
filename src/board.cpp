@@ -2,14 +2,15 @@
 
 #include <bit>
 #include <cassert>
+#include <algorithm>
 
 #include "board.hpp"
 
 using namespace board;
 
 void Board::reset() {
-  using cs = util::сonsecutive_sequence<size_t, EMPTY, regularNC - 1>::type;
-  using reset = util::sequence_in_shell<size_t, cs, OFFBOARD>;
+  using us = util::unique_sequence<unsigned char, EMPTY, regularNC>::type;
+  using reset = util::sequence_in_shell<unsigned char, us, OFFBOARD>;
   board = reset::get();
 
   std::fill(pawns.begin(), pawns.end(), 0ull);
@@ -17,9 +18,9 @@ void Board::reset() {
   std::fill(majPiece.begin(), majPiece.end(), 0);
   std::fill(minPiece.begin(), minPiece.end(), 0);
   std::fill(pieceNum.begin(), pieceNum.end(), 0);
-  std::fill(material.begin(), material.end(), 0);
+  std::fill(material.begin(), material.end(), 0u);
 
-  kings[WHITE] = kings[BLACK] = 0;
+  kings.first = kings.second = 0;
 
   side       = BOTH;
   enPas      = NO_SQ;
@@ -33,7 +34,7 @@ void Board::reset() {
 void Board::parseFEN(const std::string_view &fen) {
   reset();
 
-  size_t rank = RANK_8, file = FILE_A, piece = EMPTY;
+  int rank = RANK_8, file = FILE_A, piece = EMPTY;
 
   static std::unordered_map<char, int> pieceParser{
       {'p', bP}, {'P', wP}, {'n', bN}, {'N', wN}, {'k', bK}, {'K', wK},
@@ -106,7 +107,9 @@ void Board::parseFEN(const std::string_view &fen) {
 }
 
 size_t Board::generate() const {
-  size_t key = 0, piece = EMPTY;
+  size_t key = 0;
+  unsigned char piece;
+
   for (int sq = 0; sq < largeNC; ++sq) {
     piece = board[sq];
     if (piece != NO_SQ && piece != EMPTY && piece != OFFBOARD)
@@ -172,9 +175,9 @@ void Board::update() {
         majPiece[color]++;
 
       if (piece == wK)
-        kings[WHITE] = i;
+        kings.first = i;
       else if (piece == bK)
-        kings[BLACK] = i;
+        kings.second = i;
 
       material[color] += pieceVal[piece];
       pieceList[piece][pieceNum[piece]++] = i;
@@ -183,14 +186,14 @@ void Board::update() {
 }
 
 void Board::check() const {
-  #if defined(DEBUG_ONLY)
+#if defined(DEBUG_ONLY)
   int t_PieceNum[13] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
   int t_bigPiece[2]  = {0, 0};
   int t_majPiece[2]  = {0, 0};
   int t_minPiece[2]  = {0, 0};
   int t_material[2]  = {0, 0};
 
-  size_t sq64, t_piece, t_Piece_num, sq120, colour, pcount;
+  unsigned char sq64, t_piece, t_Piece_num, sq120, colour, pcount;
 
   size_t t_pawns[3] = {0ULL, 0ULL, 0ULL};
 
@@ -207,7 +210,7 @@ void Board::check() const {
   }
 
   // Checking piece count and other counters
-  for (sq64 = 0; sq64 < 64; ++sq64) {
+  for (sq64 = 0; sq64 < regularNC; ++sq64) {
     sq120 = convert64To120(sq64);
     t_piece = board[sq120];
 
@@ -272,14 +275,14 @@ void Board::check() const {
   assert(enPas == NO_SQ || (bRanks[enPas] == RANK_6 && side == WHITE) ||
          (bRanks[enPas] == RANK_3 && side == BLACK));
 
-  assert(board[kings[WHITE]] == wK);
-  assert(board[kings[BLACK]] == bK);
+  assert(board[kings.first] == wK);
+  assert(board[kings.second] == bK);
 
   assert(castlePerm >= 0 && castlePerm <= 15);
 #endif
 }
 
-bool Board::isAttacked(const int sq, const Color side) const {
+bool Board::isAttacked(const unsigned char sq, const Color side) const {
   // Pawns
   if (side == WHITE) {
     if (board[sq - 11] == wP || board[sq - 9] == wP)
@@ -371,4 +374,237 @@ bool Board::isAttacked(const int sq, const Color side) const {
   }
 
   return 0;
+}
+
+void Board::clearPiece(const unsigned char sq) {
+  // Check sq is on board
+  unsigned char piece = getPiece(sq);
+  // Check piece is valid
+  hashPiece(piece, sq);
+  
+  Color col = pieceCol[piece];
+  ptrdiff_t t_piece_num = -1;
+  
+  board[sq] = EMPTY;
+  material[col] -= pieceVal[piece];
+
+  if (pieceBig[piece]) {
+    --bigPiece[col];
+    if (pieceMaj[piece])
+      --majPiece[col];
+    else
+      --minPiece[col];
+  }
+  else {
+    clearBit(pawns[col], convert120To64(sq));
+    clearBit(pawns[BOTH], convert120To64(sq));
+  }
+
+  auto it = std::find_if(pieceList[piece].begin(), pieceList[piece].end(),
+                         [&sq](auto square) { return square == sq; });
+  t_piece_num = std::distance(pieceList[piece].begin(), it);
+
+  assert(t_piece_num != -1);
+
+  --pieceNum[piece];
+
+  pieceList[piece][t_piece_num] = pieceList[piece][pieceNum[piece]];
+}
+
+void Board::addPiece(const unsigned char sq, const unsigned char piece) {
+  // Check piece and side are valid
+  // Check is square on board
+
+  hashPiece(piece, sq);
+
+  Color col = pieceCol[piece];
+
+  board[sq] = piece;
+
+  if (pieceBig[piece]) {
+    ++bigPiece[col];
+    if (pieceMaj[piece])
+      ++majPiece[col];
+    else
+      ++minPiece[col];
+  }
+  else {
+    setBit(pawns[col], convert120To64(sq));
+    setBit(pawns[BOTH], convert120To64(sq));
+  }
+
+  material[col] += pieceVal[piece];
+  pieceList[piece][pieceNum[piece]++] = sq;
+}
+
+void Board::movePiece(const unsigned char from, const unsigned char to) {
+  // Check from and to are on board
+
+  unsigned char piece = getPiece(from);
+  Color col = pieceCol[piece];
+  
+  hashPiece(piece, from);
+  board[from] = EMPTY;
+
+  hashPiece(piece, to);
+  board[to] = piece;
+
+  if (!pieceBig[piece]) { // if piece is pawn
+    clearBit(pawns[col], convert120To64(from));
+    clearBit(pawns[BOTH], convert120To64(from));
+    setBit(pawns[col], convert120To64(to));
+    setBit(pawns[BOTH], convert120To64(to));
+  }
+
+  auto it = std::find_if(pieceList[piece].begin(), pieceList[piece].end(),
+                         [&from](auto elt) { return elt == from; });
+
+  assert(it != pieceList[piece].end());
+
+  auto i = std::distance(pieceList[piece].begin(), it);
+
+  pieceList[piece][i] = to;
+}
+
+void Board::takeMove() {
+  check();
+
+  --hisPly;
+  --ply;
+
+  move::Undo last_move = history[hisPly];
+  move::Move move = last_move.getMove();
+
+  unsigned char from     = move.getFrom(),
+                to       = move.getTo(),
+                captured = move.getCaptured(),
+                promoted = move.getPromoted();
+
+  if (enPas != NO_SQ)
+    hashEnPas();
+  hashCastle();
+
+  castlePerm = last_move.getCastlePerm();
+  fiftyMove  = last_move.getFiftyMove();
+  enPas      = last_move.getEnPas();
+
+  if (enPas != NO_SQ)
+    hashEnPas();
+  hashCastle();
+
+  side = Color(side ^ 1);
+  hashSide();
+
+  if (move.getCastle()) {
+    if (to == C1)
+      movePiece(D1, A1);
+    else if (to == C8)
+      movePiece(D8, A8);
+    else if (to == G1)
+      movePiece(F1, H1);
+    else if (to == G8)
+      movePiece(F8, H8);
+    else
+      assert(false);
+  }
+  else if (move.getEnPas())
+    addPiece(to + (side == WHITE ? -10 : 10), (side == WHITE ? wP : bP));
+
+  movePiece(to, from);
+
+  if (pieceK[getPiece(from)])
+    (side == WHITE ? kings.first : kings.second) = from;
+
+  if (captured != EMPTY) {
+    // Check `captured` is valid
+    addPiece(to, captured);
+  }
+
+  if (promoted != EMPTY) {
+    assert(!pieceP[promoted]); // Check `promoted` is valid
+    clearPiece(from);
+    addPiece(from, (pieceCol[promoted] == WHITE ? wP : bP));
+  }
+
+  check();
+}
+
+bool Board::makeMove(const move::Move& move) {
+  check();
+
+  unsigned char from     = move.getFrom(),
+                to       = move.getTo(),
+                captured = move.getCaptured(),
+                promoted = move.getPromoted();;
+
+  // Check that `from`, `to` on board, `side` is valid, all pieces are valid in `board`
+
+  history.emplace_back(move, castlePerm, enPas, fiftyMove, posKey);
+
+  if (move.getCastle()) {
+    if (to == C1)
+      movePiece(A1, D1);
+    else if (to == C8)
+      movePiece(A8, D8);
+    else if (to == G1)
+      movePiece(H1, F1);
+    else if (to == G8)
+      movePiece(H8, F8);
+    else
+      assert(false);
+  } else if (move.getEnPas())
+    clearPiece(to + (side == WHITE ? -10 : 10));
+
+  if (enPas != NO_SQ)
+    hashEnPas();
+  hashCastle();
+
+  castlePerm &= bCastlePerm[to];
+  castlePerm &= bCastlePerm[from];
+  enPas = NO_SQ;
+
+  hashCastle();
+
+  ++fiftyMove;
+  if (captured != EMPTY) {
+    // Check that captured is valid piece
+    clearPiece(to);
+    fiftyMove = 0;
+  }
+
+  ++hisPly;
+  ++ply;
+
+  if (pieceP[getPiece(from)]) {
+    fiftyMove = 0;
+    if (move.getPawnStart()) {
+      enPas = Cell(from + (side == WHITE ? 10 : -10));
+      assert(bRanks[enPas] == (side == WHITE ? RANK_3 : RANK_6));
+      hashEnPas();
+    }
+  }
+
+  movePiece(from, to);
+
+  if (promoted != EMPTY) {
+    // Check that `promoted` is valid and it's not a pawn
+    assert(!pieceP[promoted]);
+    clearPiece(to);
+    addPiece(to, promoted);
+  }
+
+  if (pieceK[getPiece(to)])
+    (side == WHITE ? kings.first : kings.second) = to;
+
+  side = Color(side ^ 1);
+  hashSide();
+
+  check();
+
+  if (isAttacked((side == WHITE ? kings.first : kings.second), side)) {
+    takeMove();
+    return false;
+  }
+
+  return true;
 }

@@ -19,17 +19,12 @@ TEST(meta_test, prime_number_2) {
   ASSERT_FALSE(util::is_prime<6>::value);
 }
 
-template <int... T>
-struct has_type {
-  using type = int;
-};
-
+template <int... T> struct has_type { using type = int; };
 TEST(meta_test, existence_of_type_1) {
   ASSERT_TRUE(util::has_typedef_type<has_type<>>::value);
 }
 
 template<int... T> struct no_type {};
-
 TEST(meta_test, existence_of_type_2) {
   ASSERT_FALSE(util::has_typedef_type<no_type<>>::value);
 }

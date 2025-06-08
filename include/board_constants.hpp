@@ -1,4 +1,4 @@
-// Licensed after GNU GPL v3v
+// Licensed after GNU GPL v3
 
 #ifndef __BOARD_CONSTANTS_HPP__
 #define __BOARD_CONSTANTS_HPP__
@@ -9,14 +9,14 @@
 
 #include "util.hpp"
 
-enum Color { WHITE, BLACK, BOTH };
+enum Color : unsigned char { WHITE, BLACK, BOTH};
 
-enum Piece { EMPTY, wP, wN, wB, wR, wQ, wK, bP, bN, bB, bR, bQ, bK };
+enum Piece : unsigned char { EMPTY, wP, wN, wB, wR, wQ, wK, bP, bN, bB, bR, bQ, bK };
 
-enum Files { FILE_A, FILE_B, FILE_C, FILE_D, FILE_E, FILE_F, FILE_G, FILE_H };
-enum Ranks { RANK_1, RANK_2, RANK_3, RANK_4, RANK_5, RANK_6, RANK_7, RANK_8 };
+enum Files : unsigned char { FILE_A, FILE_B, FILE_C, FILE_D, FILE_E, FILE_F, FILE_G, FILE_H};
+enum Ranks : unsigned char { RANK_1, RANK_2, RANK_3, RANK_4, RANK_5, RANK_6, RANK_7, RANK_8 };
 
-enum Cell {
+enum Cell : unsigned char {
   A1 = 21, B1, C1, D1, E1, F1, G1, H1,
   A2 = 31, B2, C2, D2, E2, F2, G2, H2,
   A3 = 41, B3, C3, D3, E3, F3, G3, H3,
@@ -31,7 +31,7 @@ enum Cell {
 
 // Each bit determines the possibility if castling
 // 1011 - black queen can castle only to king's side, white can do both
-enum CastlePerm { WKC = 1, WQC = 2, BKC = 4, BQC = 8 };
+enum CastlePerm : unsigned char { WKC = 1, WQC = 2, BKC = 4, BQC = 8 };
 
 extern std::array<std::array<size_t, 120>, 13> pieceKeys;
 extern std::array<size_t, 16> castleKeys;
@@ -77,6 +77,11 @@ constexpr std::array<Color, 13> pieceCol{
     BOTH,  WHITE, WHITE, WHITE, WHITE, WHITE, WHITE,
     BLACK, BLACK, BLACK, BLACK, BLACK, BLACK};
 
+// Is pawn?
+constexpr std::array<bool, 13> pieceP{false, true,  false, false, false,
+                                      false, false, true,  false, false,
+                                      false, false, false};
+
 // Is knight?
 constexpr std::array<bool, 13> pieceN{false, false, true,  false, false,
                                       false, false, false, true,  false,
@@ -102,13 +107,13 @@ constexpr std::array<bool, 13> pieceSlides{false, false, false, true,  true,
                                            true,  false, false, false, true,
                                            true,  true,  false};
 
-constexpr std::array<int, 8> knightMoves {-8, -19, -21, -12, 8, 19, 21, 12};
+constexpr std::array<char, 8> knightMoves {-8, -19, -21, -12, 8, 19, 21, 12};
 
-constexpr std::array<int, 8> kingMoves {-1, -10, 1, 10, -9, -11, 11, 9};
+constexpr std::array<char, 8> kingMoves {-1, -10, 1, 10, -9, -11, 11, 9};
 
-using unique_0 = util::unique_sequence<int, 0, 8>::type;
+using unique_0 = util::unique_sequence<char, 0, 8>::type;
 
-constexpr std::array<std::array<int, 8>, 13> pieceDirections {
+constexpr std::array<std::array<char, 8>, 13> pieceDirections {
   util::stoa(unique_0{}), // EMPTY
   util::stoa(unique_0{}), // wP
   knightMoves,            // wN
@@ -124,11 +129,29 @@ constexpr std::array<std::array<int, 8>, 13> pieceDirections {
   kingMoves,              // bK
 };
 
-constexpr std::array<size_t, 13> directionNumber {
+constexpr std::array<unsigned char, 13> directionNumber {
   0,
   0, 8, 4, 4, 8, 8,
   0, 8, 4, 4, 8, 8
 };
+
+// Array that will change castlePerm if wK, bK, wR or bR moves
+// 0b1111 => every one can castle
+// wR on A1 moves => castlePerm = (0b1111 & 0b1110)
+// => white can't castle to kings side
+constexpr std::array<unsigned char, largeNC> bCastlePerm {
+  15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+  15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+  15, 13, 15, 15, 15, 12, 15, 15, 14, 15,
+  15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+  15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+  15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+  15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+  15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+  15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+  15,  7, 15, 15, 15,  3, 15, 15, 11, 15,
+  15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+  15, 15, 15, 15, 15, 15, 15, 15, 15, 15};
 
 // Array that give back file from 120 index square
 using files           = util::n_sequences<util::сonsecutive_sequence<unsigned char, 0, 7>::type, 8>::type;
@@ -151,31 +174,31 @@ using clear_sequence = util::sequence_transform<size_t, util::shift_with_tilda<s
 constexpr auto clearMask = util::stoa(clear_sequence{});
 
 // 120 index board
-using board120 = util::сonsecutive_sequence<unsigned char, 0, 63>::type;
-using sequence120 = util::sequence_in_shell<unsigned char, board120, 100>;
-constexpr auto Board120 = sequence120{}.get();
+using sequence120       = util::сonsecutive_sequence<unsigned char, 0, 63>::type;
+using b120              = util::sequence_in_shell<unsigned char, sequence120, 100>;
+constexpr auto board120 = b120{}.get();
 
 // 64 index board
-using sequence64 = util::sequence_with_two_gaps<unsigned char, 21, 98>::type;
-constexpr auto Board64 = util::stoa(sequence64{});
+using b64              = util::sequence_with_two_gaps<unsigned char, 21, 98>::type;
+constexpr auto board64 = util::stoa(b64{});
 
 
 // Basic conversion from [file, rank] to index of 120 squares board
-inline size_t convertFR(size_t file, size_t rank) { return 21 + file + 10 * rank; }
+inline Cell convertFR(int file, int rank) { return Cell(21 + file + 10 * rank); }
 
 // Convert index from 120 squares board to the index of 64 squares board
-inline size_t convert64To120(size_t sq) { return Board64[sq]; }
+inline unsigned char convert64To120(const unsigned char sq) { return board64[sq]; }
 
 // Convert index from 64 squares board to the index of 120 squares board
-inline size_t convert120To64(size_t sq) { return Board120[sq]; }
+inline unsigned char convert120To64(const unsigned char sq) { return board120[sq]; }
 
 // Printing the board to the console
-inline void printBitBoard(size_t bb) {
+inline void printBitBoard(const size_t& bb) {
   size_t shift = 1ull;
   std::cout << "\n";
   for (int rank = RANK_8; rank >= RANK_1; --rank) {
     for (int file = FILE_A; file <= FILE_H; ++file) {
-      size_t sq = convertFR(file, rank);
+      Cell sq = convertFR(file, rank);
       size_t sq64 = convert120To64(sq);
       if ((shift << sq64) & bb)
         std::cout << "X";
@@ -194,8 +217,8 @@ inline size_t popBit(size_t &bb) {
   return bitTable[static_cast<int>((fold * 0x783a9b23u) >> 26u)];
 }
 
-inline void clearBit(size_t& bb, size_t square) { bb &= clearMask[square]; }
+inline void clearBit(size_t& bb, const unsigned char square) { bb &= clearMask[square]; }
 
-inline void setBit(size_t& bb, size_t square) { bb |= setMask[square]; }
+inline void setBit(size_t& bb, const unsigned char square) { bb |= setMask[square]; }
 
 #endif // __BOARD_CONSTANTS_HPP__

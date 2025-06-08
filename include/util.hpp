@@ -3,8 +3,8 @@
 /*
  * Remark:
  * The code provided here is not mandatory, as it can be replaced in board.hpp
- * with a simple initializer lists (std::array doesn't have constructor from
- * std::initializer_list, only direct init).
+ * with a simple initializer lists (std::array doesn't really
+ * have constructor from std::initializer_list, only direct init).
  * The primary purpose of this code is to practice meta-template programming
  * and make the code more "genelized".
  * Overall, the technique used here can be efficient for large constexpr arrays.
@@ -105,12 +105,11 @@ struct Sqrt : std::integral_constant < T,
     return {r, c};
   }
 
-  // ----------------------------Sequence for Board64----------------------------
+  // Sequence for Board64
   // The main idea is that we skip [8], [9, [18], [19], [28], [29] and so on
   // elements in sequence
 
   // Example: sequence from 1 to 18
-
   // 1   2   3   4   5   6   7   8
   // 11  12  13  14  15  16  17  18
 
@@ -130,7 +129,7 @@ struct Sqrt : std::integral_constant < T,
     using type = sequence<T, Start>;
   };
 
-  // ---------------------------Sequence for Board120---------------------------
+  // Sequence for Board120
   // The main idea is to create a shell with a sequence in it
 
   // I think this would be even more complicated to use if I allow user to change
@@ -163,17 +162,15 @@ struct Sqrt : std::integral_constant < T,
   struct sequence_in_shell {
     static constexpr size_t size_ = Seq::size();
 
-    static constexpr auto pair = find_pair<size_>();
-
-    static constexpr size_t rows = pair.first,
-                            cols = pair.second,
+    static constexpr size_t rows = find_pair<size_>().first,
+                            cols = find_pair<size_>().second,
                             totalRows = rows + shellRows * 2,
                             totalCols = cols + shellCols * 2,
                             total = totalCols * totalRows;
 
     static consteval auto get() {
-      std::array<T, size_> seq = stoa(Seq {});
-      std::array<T, total> arr {};
+      std::array<T, size_> seq = stoa(Seq{});
+      std::array<T, total> arr{};
 
       for (size_t i = 0; i < total; ++i) {
         if (i < shellRows * totalCols + shellCols)
@@ -183,7 +180,7 @@ struct Sqrt : std::integral_constant < T,
             for (size_t j = 0; j < rows; ++j) {
               size_t lower = j * totalCols + shellRows * totalCols + shellCols;
               size_t upper = lower + cols - 1;
-              if (i >= lower && i <= upper)
+              if (lower <= i && i <= upper)
                 return std::make_pair(true, j);
             }
             return std::make_pair(false, size_t {0});
@@ -219,16 +216,16 @@ struct Sqrt : std::integral_constant < T,
   };
 
 
-  // ----------------------------Function for setMask----------------------------
+  // Function for setMask
   template <std::integral T>
-  constexpr auto shift = [](T i) { return static_cast<T>(1ull << i); };
+  constexpr auto shift = [](T i) { return static_cast<T>(0ull | (1ull << i)); };
 
-  // ---------------------------Function for clearMask---------------------------
+  // Function for clearMask
   template <std::integral T>
-  constexpr auto shift_with_tilda = [](T i) { return ~(static_cast<T>(1ull << i)); };
+  constexpr auto shift_with_tilda = [](T i) { return ~(static_cast<T>(0ull | (1ull << i))); };
 
 
-  // ----------------------------Consecutive sequence----------------------------
+  // Consecutive sequence
   template <std::integral T, T Start, T End>
   struct сonsecutive_sequence {
     static_assert(Start < End);
@@ -264,7 +261,7 @@ struct Sqrt : std::integral_constant < T,
     using type = sequence<T, Nums...>;
   };
 
-  // Sequence with contains single number
+  // Sequence with contains N single number
   template <std::integral T, T Num, size_t N>
   struct unique_sequence {
     using type = unique_sequence<T, Num, N - 1>::type::template append<Num>;
@@ -279,7 +276,7 @@ struct Sqrt : std::integral_constant < T,
   template <std::integral T, T From, T To, size_t N>
   struct columnar_sequence {
     static_assert(From < To);
-
+  private:
     template <T Current>
     struct generate_columns {
       using type = typename concat_sequences<
@@ -290,9 +287,12 @@ struct Sqrt : std::integral_constant < T,
     template <> struct generate_columns<From> {
       using type = unique_sequence<T, From, N>::type;
     };
-
+  public:
     using type = typename generate_columns<To>::type;
   };
+
+  // template <std::integral T, T Num, T... Except>
+
 } // namespace util
 
 #endif // __UTIL_HPP__

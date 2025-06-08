@@ -15,7 +15,7 @@ TEST(board_constants_test, board64) {
     81, 82, 83, 84, 85, 86, 87, 88,
     91, 92, 93, 94, 95, 96, 97, 98};
 
-  ASSERT_EQ(expected, Board64);
+  ASSERT_EQ(expected, board64);
 }
 
 TEST(board_constants_test, board120) {
@@ -33,25 +33,25 @@ TEST(board_constants_test, board120) {
     100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
     100, 100, 100, 100, 100, 100, 100, 100, 100, 100};
 
-  ASSERT_EQ(expected, Board120);
+  ASSERT_EQ(expected, board120);
 }
 
 TEST(board_constants_test, board) {
-  using cs = util::сonsecutive_sequence<size_t, EMPTY, regularNC - 1>::type;
-  using reset = util::sequence_in_shell<size_t, cs, OFFBOARD>;
+  using us = util::unique_sequence<unsigned char, EMPTY, regularNC>::type;
+  using reset = util::sequence_in_shell<unsigned char, us, OFFBOARD>;
   constexpr auto arr = reset::get();
 
-  constexpr std::array<size_t, 120> expected {
+  constexpr std::array<unsigned char, 120> expected {
     100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
     100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
-    100,   0,   1,   2,   3,   4,   5,   6,   7, 100,
-    100,   8,   9,  10,  11,  12,  13,  14,  15, 100,
-    100,  16,  17,  18,  19,  20,  21,  22,  23, 100,
-    100,  24,  25,  26,  27,  28,  29,  30,  31, 100,
-    100,  32,  33,  34,  35,  36,  37,  38,  39, 100,
-    100,  40,  41,  42,  43,  44,  45,  46,  47, 100,
-    100,  48,  49,  50,  51,  52,  53,  54,  55, 100,
-    100,  56,  57,  58,  59,  60,  61,  62,  63, 100,
+    100,   0,   0,   0,   0,   0,   0,   0,   0, 100,
+    100,   0,   0,   0,   0,   0,   0,   0,   0, 100,
+    100,   0,   0,   0,   0,   0,   0,   0,   0, 100,
+    100,   0,   0,   0,   0,   0,   0,   0,   0, 100,
+    100,   0,   0,   0,   0,   0,   0,   0,   0, 100,
+    100,   0,   0,   0,   0,   0,   0,   0,   0, 100,
+    100,   0,   0,   0,   0,   0,   0,   0,   0, 100,
+    100,   0,   0,   0,   0,   0,   0,   0,   0, 100,
     100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
     100, 100, 100, 100, 100, 100, 100, 100, 100, 100};
 

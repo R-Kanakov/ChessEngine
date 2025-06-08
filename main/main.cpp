@@ -56,33 +56,34 @@ int main() {
   board |= 1ull << convert120To64(G2);
   printBitBoard(board);
 
-
   //b.reset();
   b.check();
 
   move::Move m;
   int from = A2, to = H7;
   int cap = wR, prom = bK;
-
   m.SetInfo(from | to << 7 | cap << 14 | prom << 20);
 
-  std::cout << "\nFrom: " << m.getFrom() << ", to: " << m.getTo() << ", cap: " 
-            << m.getCaptured() << ", prom: " << m.getPromoted() << "\n";
+  std::cout << "\nFrom: " << m.getFrom()
+            << ", to: "   << m.getTo()
+            << ", cap: "  << m.getCaptured()
+            << ", prom: " << m.getPromoted() << "\n";
 
   std::cout << "Algebraic from: " << move::getDumpSquare(from) << "\n";
-  std::cout << "Algebraic to: " << move::getDumpSquare(to) << "\n";
-  std::cout << "Algebraic move: " << m.getDumpMove() << "\n";
+  std::cout << "Algebraic to: "   << move::getDumpSquare(to)   << "\n";
+  std::cout << "Algebraic move: " << m.getDumpMove()           << "\n";
 
-  b.parseFEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
+  b.parseFEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R b KQkq - 0 1");
   b.dump(std::cout);
   b.check();
 
   move::MoveList l;
 
   l.GenerateAllMoves(b);
-
   l.dump(std::cout);
+
+  b.makeMove(l[9]);
+  b.dump(std::cout);
 
   return 0;
 }
-

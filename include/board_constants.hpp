@@ -9,11 +9,11 @@
 
 #include "util.hpp"
 
-enum Color : unsigned char { WHITE, BLACK, BOTH};
+enum Color : unsigned char { WHITE, BLACK, BOTH };
 
 enum Piece : unsigned char { EMPTY, wP, wN, wB, wR, wQ, wK, bP, bN, bB, bR, bQ, bK };
 
-enum Files : unsigned char { FILE_A, FILE_B, FILE_C, FILE_D, FILE_E, FILE_F, FILE_G, FILE_H};
+enum Files : unsigned char { FILE_A, FILE_B, FILE_C, FILE_D, FILE_E, FILE_F, FILE_G, FILE_H };
 enum Ranks : unsigned char { RANK_1, RANK_2, RANK_3, RANK_4, RANK_5, RANK_6, RANK_7, RANK_8 };
 
 enum Cell : unsigned char {
@@ -68,14 +68,14 @@ constexpr std::array pieceMin{false, false, true, true,  false, false, false,
 
 // Cost of each piece
 // pawn = 100, knight = 325, bishop = 325,
-// rook = 550, queen = 1000, king = INT_MAX
-constexpr std::array pieceVal{0,   100, 325, 325, 550,  1000, INT_MAX,
-                              100, 325, 325, 550, 1000, INT_MAX};
+// rook = 550,  queen = 1000,  king = INT_MAX
+constexpr std::array pieceVal{0, 100, 325, 325, 550,  1000, INT_MAX,
+                                 100, 325, 325, 550,  1000, INT_MAX};
 
 // What color is piece
 constexpr std::array<Color, 13> pieceCol{
     BOTH,  WHITE, WHITE, WHITE, WHITE, WHITE, WHITE,
-    BLACK, BLACK, BLACK, BLACK, BLACK, BLACK};
+           BLACK, BLACK, BLACK, BLACK, BLACK, BLACK};
 
 // Is pawn?
 constexpr std::array<bool, 13> pieceP{false, true,  false, false, false,
@@ -135,10 +135,11 @@ constexpr std::array<unsigned char, 13> directionNumber {
   0, 8, 4, 4, 8, 8
 };
 
-// Array that will change castlePerm if wK, bK, wR or bR moves
-// 0b1111 => every one can castle
-// wR on A1 moves => castlePerm = (0b1111 & 0b1110)
-// => white can't castle to kings side
+// Array that will change castlePerm if wK, bK, wR or bR moves.
+// 0b1111 => everyone can castle in each way.
+// If wR on A1 moves =>
+// castlePerm = (0b1111 & 0b1110) =>
+// white can't castle to kings side.
 constexpr std::array<unsigned char, largeNC> bCastlePerm {
   15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
   15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
@@ -174,8 +175,8 @@ using clear_sequence = util::sequence_transform<size_t, util::shift_with_tilda<s
 constexpr auto clearMask = util::stoa(clear_sequence{});
 
 // 120 index board
-using sequence120       = util::сonsecutive_sequence<unsigned char, 0, 63>::type;
-using b120              = util::sequence_in_shell<unsigned char, sequence120, 100>;
+using sequence120 = util::сonsecutive_sequence<unsigned char, 0, 63>::type;
+using b120 = util::sequence_in_shell<unsigned char, sequence120, 100>;
 constexpr auto board120 = b120{}.get();
 
 // 64 index board
@@ -210,7 +211,7 @@ inline void printBitBoard(const size_t& bb) {
 }
 
 // Returns position and delete the smallest bit in number
-inline size_t popBit(size_t &bb) {
+inline unsigned char popBit(size_t &bb) {
   size_t b = bb ^ (bb - 1);
   unsigned fold = (b & UINT32_MAX) ^ (b >> 32);
   bb &= bb - 1;

@@ -2,18 +2,22 @@
 
 /*
  * Remark:
- * The code provided here is not mandatory, as it can be replaced in board.hpp
+ * The code provided here is not mandatory, as it can be replaced in `board_constants.hpp`
  * with a simple initializer lists (std::array doesn't really
- * have constructor from std::initializer_list, only direct init).
+ * have constructor from std::initializer_list, only direct initialization).
+ * 
  * The primary purpose of this code is to practice meta-template programming
  * and make the code more "genelized".
+ * 
  * Overall, the technique used here can be efficient for large constexpr arrays.
  * Not really for now because of compiler constraint:
  * "recursive template instantiation exceeded maximum depth of 1024".
  * Can be fixed via -ftemplate-depth=10000 (clang++) flag, but it works really bad.
+ * 
  * Probably the best option to divide instatitions to the maximum possible step
  * (the big problem is to know how can it be for arbitrary recursive template)
  * and concatenate all of them via `concat_sequences`.
+ * 
  * One more idea of usage is to create some simple sequence and than do
  * seq -> transform -> transform -> ... -> in_shell
  * in compile time.
@@ -156,7 +160,7 @@ struct Sqrt : std::integral_constant < T,
   concept SequenceCheck = is_instance_of<Seq>::value &&
                           !(is_prime<Seq::size()>::value);
 
-  // Main algorithm to create sequence in a shell
+  // Sequence in a shell
   template <std::integral T, typename Seq, T shellNum>
     requires SequenceCheck<T, Seq>
   struct sequence_in_shell {
@@ -168,6 +172,7 @@ struct Sqrt : std::integral_constant < T,
                             totalCols = cols + shellCols * 2,
                             total = totalCols * totalRows;
 
+    // Main algorithm to create sequence in a shell
     static consteval auto get() {
       std::array<T, size_> seq = stoa(Seq{});
       std::array<T, total> arr{};
@@ -290,9 +295,6 @@ struct Sqrt : std::integral_constant < T,
   public:
     using type = typename generate_columns<To>::type;
   };
-
-  // template <std::integral T, T Num, T... Except>
-
 } // namespace util
 
 #endif // __UTIL_HPP__

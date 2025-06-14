@@ -1,5 +1,9 @@
 // Licensed after GNU GPL v3
 
+#include <algorithm>
+#include <cassert>
+#include <iomanip>
+
 #include "init.hpp"
 
 // TODO: move all checks to tests
@@ -22,6 +26,7 @@ void printBoard64(auto b) {
   }
 }
 
+// err rnbqkbnr/pppp1ppp/4p3/6B1/2P5/8/PP1PPPPP/RN1QKBNR w KQkq - 0 1 
 
 // Two queens 8/8/8/2Q5/8/6q1/8/8 w - - 0 1
 // Two rooks  8/8/8/2r5/8/6R1/8/8 w - - 0 1
@@ -45,6 +50,7 @@ void printBoard64(auto b) {
 // castle2 3rk2r/8/8/8/8/8/6p1/R3K2R w KQkq - 0 1
 // castle3 r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1
 
+// 2P1P3/2PKP3/2P1P2B/8/8/8/8/r3k3 w - -Q-- 3 1 
 
 int main() {
   allInit();
@@ -73,17 +79,6 @@ int main() {
   std::cout << "Algebraic to: "   << move::getDumpSquare(to)   << "\n";
   std::cout << "Algebraic move: " << m.getDumpMove()           << "\n";
 
-  b.parseFEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R b KQkq - 0 1");
-  b.dump(std::cout);
-  b.check();
-
-  move::MoveList l;
-
-  l.GenerateAllMoves(b);
-  l.dump(std::cout);
-
-  b.makeMove(l[9]);
-  b.dump(std::cout);
 
   return 0;
 }

@@ -3,7 +3,6 @@
 #ifndef __BOARD_HPP__
 #define __BOARD_HPP__
 
-#include <iomanip>
 #include <iostream>
 #include <unordered_map>
 #include <vector>
@@ -16,6 +15,7 @@ class Board {
   std::array<unsigned char, largeNC> board;
 
   // It consists of 3 boards, each represented in 64 bits (ull):
+  static_assert(sizeof(size_t) == 8);
   // 1. For white pawns
   // 2. For black pawns
   // 3. For pawns of both colors
@@ -25,12 +25,10 @@ class Board {
   // It is useful to keep the positions of kings
   // on the board for the same reason.
   // `unsigned char` is used because there are only 120 possible
-  // fields for a move.
-  // In fact, we only need one to store the kings
-  // (120 for the first, 120 for the second, total 240, while 1 holds 255)
+  // fields.
   std::pair<unsigned char, unsigned char> kings;
 
-  // See Color enum
+  // See Color enum in `board_constants.hpp`
   Color side;
 
   // Place where en passant move is possible
@@ -75,8 +73,8 @@ class Board {
   // Piece list is a matrix that contain a type of piece in the current position
   // For example: we want to set white knight to the board on E1 square
   // so we just do => pList[wN][0] = E1;
-  // This will help to look on all piece of current color
-  // with that array we don't need to look through all empty squares
+  // This will help to look on all pieces of current color
+  // We also don't need to look through all empty squares
   std::array<std::array<unsigned char, 10>, 13> pieceList;
 
 #if defined(DEBUG_ONLY)
@@ -92,25 +90,26 @@ public:
 
   // Getters
 public:
-  Color getSide()   const { return side; }
-  size_t getEnPas() const { return enPas; }
+  Color getSide() const noexcept { return side; }
+  Cell getEnPas() const noexcept { return enPas; }
   
-  unsigned char getPiece(unsigned char sq) const {
+  unsigned char getPiece(const unsigned char sq) const {
     return board[sq];
   }
-  unsigned char getPieceNum(unsigned char piece) const {
+  unsigned char getPieceNum(const unsigned char piece) const {
     return pieceNum[piece];
   }
-  unsigned char getPieceListSq(unsigned char side, unsigned char num) const {
-    return pieceList[side][num];
+  unsigned char getPieceListSq(const unsigned char piece,
+                               const unsigned char num) const {
+    return pieceList[piece][num];
   }
-  unsigned char getCastlePerm() const {
+  unsigned char getCastlePerm() const noexcept {
     return castlePerm;
   };
 
-  // Other methods
+  // Other methods (defined in `board.cpp`)
 public:
-  // Reset most of the Board fields
+  // Reset Board fields
   void reset();
 
   // Parsing FEN
@@ -139,16 +138,24 @@ private:
   void hashSide()   { posKey ^= sideKey; }
   void hashEnPas()  { posKey ^= pieceKeys[EMPTY][enPas]; }
 
-  // Methods that will be used in makeMove
+  // Methods that will be used in makeMove (defined in `makemove.cpp`)
 private:
   void clearPiece(const unsigned char sq);
   void addPiece(const unsigned char sq, const unsigned char piece);
   void movePiece(const unsigned char from, const unsigned char to);
   
 public:
-  void takeMove();
+  void takeBackMove();
   bool makeMove(const move::Move& move);
-
+  
+  bool history_empty() const noexcept { return history.empty(); }
+  void print_history(std::ostream& o) {
+    Board b(startPos);
+    for (int i = 0; i < history.size(); ++i) {
+      b.makeMove(history[i].getMove());
+      b.dump(o);
+    }
+  }
 };
 } // namespace board
 

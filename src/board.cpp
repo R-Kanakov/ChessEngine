@@ -1,8 +1,11 @@
 // Licensed after GNU GPL v3
 
 #include <bit>
+
+#if defined(DEBUG_ONLY)
 #include <cassert>
-#include <algorithm>
+#include <iomanip>
+#endif
 
 #include "board.hpp"
 
@@ -19,6 +22,7 @@ void Board::reset() {
   std::fill(minPiece.begin(), minPiece.end(), 0);
   std::fill(pieceNum.begin(), pieceNum.end(), 0);
   std::fill(material.begin(), material.end(), 0u);
+  history.clear();
 
   kings.first = kings.second = 0;
 
@@ -26,9 +30,9 @@ void Board::reset() {
   enPas      = NO_SQ;
   fiftyMove  = 0;
   castlePerm = 0;
-  ply    = 0;
-  hisPly = 0;
-  posKey = 0ull;
+  ply        = 0;
+  hisPly     = 0;
+  posKey     = 0ull;
 }
 
 void Board::parseFEN(const std::string_view &fen) {
@@ -128,6 +132,7 @@ size_t Board::generate() const {
 }
 
 void Board::dump(std::ostream& os) const {
+#if defined(DEBUG_ONLY)
   os << "\n        Game board\n";
 
   for (int rank = RANK_8; rank >= RANK_1; --rank) {
@@ -152,6 +157,7 @@ void Board::dump(std::ostream& os) const {
                     << (castlePerm & BQC ? 'q' : '-');
 
   os << "\nposKey : " << std::hex << posKey << std::dec << "\n";
+#endif
 }
 
 void Board::update() {
@@ -195,7 +201,7 @@ void Board::check() const {
 
   unsigned char sq64, t_piece, t_Piece_num, sq120, colour, pcount;
 
-  size_t t_pawns[3] = {0ULL, 0ULL, 0ULL};
+  size_t t_pawns[3] = {0ull, 0ull, 0ull};
 
   t_pawns[WHITE] = pawns[WHITE];
   t_pawns[BLACK] = pawns[BLACK];
@@ -272,7 +278,8 @@ void Board::check() const {
   assert(side == WHITE || side == BLACK);
   assert(generate() == posKey);
 
-  assert(enPas == NO_SQ || (bRanks[enPas] == RANK_6 && side == WHITE) ||
+  assert(enPas == NO_SQ ||
+         (bRanks[enPas] == RANK_6 && side == WHITE) ||
          (bRanks[enPas] == RANK_3 && side == BLACK));
 
   assert(board[kings.first] == wK);
@@ -282,9 +289,9 @@ void Board::check() const {
 #endif
 }
 
-bool Board::isAttacked(const unsigned char sq, const Color side) const {
+bool Board::isAttacked(const unsigned char sq, const Color side_) const {
   // Pawns
-  if (side == WHITE) {
+  if (side_ == WHITE) {
     if (board[sq - 11] == wP || board[sq - 9] == wP)
       return true;
   } else if (board[sq + 11] == bP || board[sq + 9] == bP)
@@ -292,30 +299,31 @@ bool Board::isAttacked(const unsigned char sq, const Color side) const {
 
   // Knights
   for (auto knight : knightMoves) {
-    size_t piece = board[sq + knight];
+    unsigned char piece = board[sq + knight];
     if (piece != OFFBOARD && (piece == wN || piece == bN) &&
-        pieceCol[piece] == side)
+        pieceCol[piece] == side_)
       return true;
   }
 
   // Diagonal direction (Bishops and Queens)
-  auto checkBQ = [&](int curr) -> int {
+  auto checkBQ = [&](char curr) -> int {
     if (board[curr] == EMPTY)
       return -1;
     if (board[curr] == OFFBOARD)
       return 0;
-    if ((board[curr] == wQ || board[curr] == wB || board[curr] == bQ ||
-         board[curr] == bB) &&
-        pieceCol[board[curr]] == side)
+    if ((board[curr] == wQ || board[curr] == wB ||
+         board[curr] == bQ || board[curr] == bB) &&
+        pieceCol[board[curr]] == side_)
       return 1;
     return 0;
   };
 
-  int curr = sq, tmp = 11;
+  unsigned char curr = sq;
+  char tmp = 11;
 
   while (true) {
     curr += tmp;
-    int res = checkBQ(curr);
+    char res = checkBQ(curr);
 
     if (res == 0) {
       curr = sq;
@@ -340,7 +348,7 @@ bool Board::isAttacked(const unsigned char sq, const Color side) const {
       return 0;
     if ((board[curr] == wQ || board[curr] == wR || board[curr] == bQ ||
          board[curr] == bR) &&
-        pieceCol[board[curr]] == side)
+        pieceCol[board[curr]] == side_)
       return 1;
     return 0;
   };
@@ -349,7 +357,7 @@ bool Board::isAttacked(const unsigned char sq, const Color side) const {
 
   while (true) {
     curr += tmp;
-    int res = checkRQ(curr);
+    char res = checkRQ(curr);
 
     if (res == 0) {
       curr = sq;
@@ -367,244 +375,11 @@ bool Board::isAttacked(const unsigned char sq, const Color side) const {
   }
 
   for (auto king : kingMoves) {
-    size_t piece = board[sq + king];
+    unsigned char piece = board[sq + king];
     if (piece != OFFBOARD && (piece == wK || piece == bK) &&
-        pieceCol[piece] == side)
+        pieceCol[piece] == side_)
       return true;
   }
 
   return 0;
-}
-
-void Board::clearPiece(const unsigned char sq) {
-  // Check sq is on board
-  unsigned char piece = getPiece(sq);
-  // Check piece is valid
-  hashPiece(piece, sq);
-  
-  Color col = pieceCol[piece];
-  ptrdiff_t t_piece_num = -1;
-  
-  board[sq] = EMPTY;
-  material[col] -= pieceVal[piece];
-
-  if (pieceBig[piece]) {
-    --bigPiece[col];
-    if (pieceMaj[piece])
-      --majPiece[col];
-    else
-      --minPiece[col];
-  }
-  else {
-    clearBit(pawns[col], convert120To64(sq));
-    clearBit(pawns[BOTH], convert120To64(sq));
-  }
-
-  auto it = std::find_if(pieceList[piece].begin(), pieceList[piece].end(),
-                         [&sq](auto square) { return square == sq; });
-  t_piece_num = std::distance(pieceList[piece].begin(), it);
-
-  assert(t_piece_num != -1);
-
-  --pieceNum[piece];
-
-  pieceList[piece][t_piece_num] = pieceList[piece][pieceNum[piece]];
-}
-
-void Board::addPiece(const unsigned char sq, const unsigned char piece) {
-  // Check piece and side are valid
-  // Check is square on board
-
-  hashPiece(piece, sq);
-
-  Color col = pieceCol[piece];
-
-  board[sq] = piece;
-
-  if (pieceBig[piece]) {
-    ++bigPiece[col];
-    if (pieceMaj[piece])
-      ++majPiece[col];
-    else
-      ++minPiece[col];
-  }
-  else {
-    setBit(pawns[col], convert120To64(sq));
-    setBit(pawns[BOTH], convert120To64(sq));
-  }
-
-  material[col] += pieceVal[piece];
-  pieceList[piece][pieceNum[piece]++] = sq;
-}
-
-void Board::movePiece(const unsigned char from, const unsigned char to) {
-  // Check from and to are on board
-
-  unsigned char piece = getPiece(from);
-  Color col = pieceCol[piece];
-  
-  hashPiece(piece, from);
-  board[from] = EMPTY;
-
-  hashPiece(piece, to);
-  board[to] = piece;
-
-  if (!pieceBig[piece]) { // if piece is pawn
-    clearBit(pawns[col], convert120To64(from));
-    clearBit(pawns[BOTH], convert120To64(from));
-    setBit(pawns[col], convert120To64(to));
-    setBit(pawns[BOTH], convert120To64(to));
-  }
-
-  auto it = std::find_if(pieceList[piece].begin(), pieceList[piece].end(),
-                         [&from](auto elt) { return elt == from; });
-
-  assert(it != pieceList[piece].end());
-
-  auto i = std::distance(pieceList[piece].begin(), it);
-
-  pieceList[piece][i] = to;
-}
-
-void Board::takeMove() {
-  check();
-
-  --hisPly;
-  --ply;
-
-  move::Undo last_move = history[hisPly];
-  move::Move move = last_move.getMove();
-
-  unsigned char from     = move.getFrom(),
-                to       = move.getTo(),
-                captured = move.getCaptured(),
-                promoted = move.getPromoted();
-
-  if (enPas != NO_SQ)
-    hashEnPas();
-  hashCastle();
-
-  castlePerm = last_move.getCastlePerm();
-  fiftyMove  = last_move.getFiftyMove();
-  enPas      = last_move.getEnPas();
-
-  if (enPas != NO_SQ)
-    hashEnPas();
-  hashCastle();
-
-  side = Color(side ^ 1);
-  hashSide();
-
-  if (move.getCastle()) {
-    if (to == C1)
-      movePiece(D1, A1);
-    else if (to == C8)
-      movePiece(D8, A8);
-    else if (to == G1)
-      movePiece(F1, H1);
-    else if (to == G8)
-      movePiece(F8, H8);
-    else
-      assert(false);
-  }
-  else if (move.getEnPas())
-    addPiece(to + (side == WHITE ? -10 : 10), (side == WHITE ? wP : bP));
-
-  movePiece(to, from);
-
-  if (pieceK[getPiece(from)])
-    (side == WHITE ? kings.first : kings.second) = from;
-
-  if (captured != EMPTY) {
-    // Check `captured` is valid
-    addPiece(to, captured);
-  }
-
-  if (promoted != EMPTY) {
-    assert(!pieceP[promoted]); // Check `promoted` is valid
-    clearPiece(from);
-    addPiece(from, (pieceCol[promoted] == WHITE ? wP : bP));
-  }
-
-  check();
-}
-
-bool Board::makeMove(const move::Move& move) {
-  check();
-
-  unsigned char from     = move.getFrom(),
-                to       = move.getTo(),
-                captured = move.getCaptured(),
-                promoted = move.getPromoted();;
-
-  // Check that `from`, `to` on board, `side` is valid, all pieces are valid in `board`
-
-  history.emplace_back(move, castlePerm, enPas, fiftyMove, posKey);
-
-  if (move.getCastle()) {
-    if (to == C1)
-      movePiece(A1, D1);
-    else if (to == C8)
-      movePiece(A8, D8);
-    else if (to == G1)
-      movePiece(H1, F1);
-    else if (to == G8)
-      movePiece(H8, F8);
-    else
-      assert(false);
-  } else if (move.getEnPas())
-    clearPiece(to + (side == WHITE ? -10 : 10));
-
-  if (enPas != NO_SQ)
-    hashEnPas();
-  hashCastle();
-
-  castlePerm &= bCastlePerm[to];
-  castlePerm &= bCastlePerm[from];
-  enPas = NO_SQ;
-
-  hashCastle();
-
-  ++fiftyMove;
-  if (captured != EMPTY) {
-    // Check that captured is valid piece
-    clearPiece(to);
-    fiftyMove = 0;
-  }
-
-  ++hisPly;
-  ++ply;
-
-  if (pieceP[getPiece(from)]) {
-    fiftyMove = 0;
-    if (move.getPawnStart()) {
-      enPas = Cell(from + (side == WHITE ? 10 : -10));
-      assert(bRanks[enPas] == (side == WHITE ? RANK_3 : RANK_6));
-      hashEnPas();
-    }
-  }
-
-  movePiece(from, to);
-
-  if (promoted != EMPTY) {
-    // Check that `promoted` is valid and it's not a pawn
-    assert(!pieceP[promoted]);
-    clearPiece(to);
-    addPiece(to, promoted);
-  }
-
-  if (pieceK[getPiece(to)])
-    (side == WHITE ? kings.first : kings.second) = to;
-
-  side = Color(side ^ 1);
-  hashSide();
-
-  check();
-
-  if (isAttacked((side == WHITE ? kings.first : kings.second), side)) {
-    takeMove();
-    return false;
-  }
-
-  return true;
 }

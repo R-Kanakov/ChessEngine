@@ -93,3 +93,23 @@ TEST(board_constants_test, files_board) {
 
   ASSERT_EQ(expected, bFiles);
 }
+
+TEST(board_constants_test, set_mask_board) {
+  std::array<size_t, regularNC> SetMask;
+  for (int i= 0; i< regularNC; ++i)
+    SetMask[i] = 0ull;
+  for (int i = 0; i < regularNC; ++i)
+    SetMask[i] |= (1ull << i);
+
+  ASSERT_EQ(SetMask, setMask);
+}
+
+TEST(board_constants_test, clear_mask_board) {
+  std::array<size_t, regularNC> ClearMask;
+  for (int i = 0; i < regularNC; ++i)
+    ClearMask[i] = 0ull;
+  for (int i = 0; i < regularNC; ++i)
+    ClearMask[i] |= ~(1ull << i);
+
+  ASSERT_EQ(ClearMask, clearMask);
+}
